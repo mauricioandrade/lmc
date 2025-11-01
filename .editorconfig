@@ -1,0 +1,107 @@
+# EditorConfig para projetos Java e Spring Boot
+# https://editorconfig.org
+
+# Configuração raiz
+root = true
+
+# Configurações padrão para todos os arquivos
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Arquivos Java
+[*.java]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+continuation_indent_size = 8
+
+# Arquivos XML (pom.xml, configurações Spring, etc)
+[*.xml]
+indent_style = space
+indent_size = 2
+
+# Arquivos de propriedades
+[*.properties]
+indent_style = space
+indent_size = 4
+charset = utf-8
+
+# Arquivos YAML (application.yml, etc)
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Arquivos JSON
+[*.json]
+indent_style = space
+indent_size = 2
+
+# Arquivos SQL
+[*.sql]
+indent_style = space
+indent_size = 2
+
+# Arquivos Markdown
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# Arquivos de configuração Gradle
+[*.gradle]
+indent_style = space
+indent_size = 4
+
+[*.gradle.kts]
+indent_style = space
+indent_size = 4
+
+# Arquivos de build Maven
+[pom.xml]
+indent_style = space
+indent_size = 2
+
+# Scripts shell
+[*.sh]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+
+# Arquivos batch do Windows
+[*.{bat,cmd}]
+end_of_line = crlf
+
+# Arquivos HTML/CSS/JS (para projetos com frontend)
+[*.html]
+indent_style = space
+indent_size = 2
+
+[*.{css,scss,sass}]
+indent_style = space
+indent_size = 2
+
+[*.{js,jsx,ts,tsx}]
+indent_style = space
+indent_size = 2
+
+# Dockerfiles
+[Dockerfile]
+indent_style = space
+indent_size = 2
+
+[*.dockerfile]
+indent_style = space
+indent_size = 2
+
+# Arquivos de configuração do Git
+[.gitattributes]
+indent_style = space
+indent_size = 2
+
+[.gitignore]
+indent_style = space
+indent_size = 2
