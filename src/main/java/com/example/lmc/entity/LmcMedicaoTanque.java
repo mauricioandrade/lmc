@@ -2,12 +2,18 @@ package com.example.lmc.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 
 @Entity
-@Data
+@Getter
+@Setter
+@ToString(exclude = "lmcFolha")
+@EqualsAndHashCode(exclude = "lmcFolha")
 @Table(name = "lmc_medicao_tanque")
 public class LmcMedicaoTanque {
 

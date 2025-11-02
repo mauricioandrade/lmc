@@ -2,18 +2,24 @@ package com.example.lmc.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Set;
 
 @Entity
-@Data
+@Getter
+@Setter
+
+@ToString(exclude = {"medicoesTanque", "compras", "vendasBico"})
+@EqualsAndHashCode(exclude = {"medicoesTanque", "compras", "vendasBico"})
 @Table(name = "lmc_folha", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"data", "produto_id"})
 })
-
 public class LmcFolha {
 
     @Id
@@ -29,15 +35,15 @@ public class LmcFolha {
 
     @OneToMany(mappedBy = "lmcFolha", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("folha-medicao")
-    private List<LmcMedicaoTanque> medicoesTanque;
+    private Set<LmcMedicaoTanque> medicoesTanque;
 
     @OneToMany(mappedBy = "lmcFolha", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("folha-compra")
-    private List<LmcCompra> compras;
+    private Set<LmcCompra> compras;
 
     @OneToMany(mappedBy = "lmcFolha", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("folha-venda")
-    private List<LmcVendaBico> vendasBico;
+    private Set<LmcVendaBico> vendasBico;
 
     // --- Campos Calculados/Totalizados ---
 
