@@ -7,12 +7,13 @@ import net.sf.jasperreports.engine.export.JRPdfExporter;
 import net.sf.jasperreports.export.SimpleExporterInput;
 import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ResourceUtils;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.LocalDate;
@@ -32,21 +33,25 @@ public class RelatorioPdfService {
     // Construtor: Compila todos os relatórios na inicialização
     public RelatorioPdfService() {
         try {
-            File filePrincipal = ResourceUtils.getFile("classpath:reports/LMC_Anexo_Oficial.jrxml");
-            this.jasperReportPrincipal = JasperCompileManager.compileReport(filePrincipal.getAbsolutePath());
+            this.jasperReportPrincipal = compileReport("reports/lmc_anexo_oficial.jrxml");
+            this.jasperSubReportCompras = compileReport("reports/sub_compras.jrxml");
+            this.jasperSubReportVendas = compileReport("reports/sub_vendas_bico.jrxml");
+            this.jasperSubReportMedicoes = compileReport("reports/sub_medicoes_tanque.jrxml");
 
-            File fileCompras = ResourceUtils.getFile("classpath:reports/sub_compras.jrxml");
-            this.jasperSubReportCompras = JasperCompileManager.compileReport(fileCompras.getAbsolutePath());
-
-            File fileVendas = ResourceUtils.getFile("classpath:reports/sub_vendas_bico.jrxml");
-            this.jasperSubReportVendas = JasperCompileManager.compileReport(fileVendas.getAbsolutePath());
-
-            File fileMedicoes = ResourceUtils.getFile("classpath:reports/sub_medicoes_tanque.jrxml");
-            this.jasperSubReportMedicoes = JasperCompileManager.compileReport(fileMedicoes.getAbsolutePath());
-
-        } catch (FileNotFoundException | JRException e) {
+        } catch (IOException | JRException e) {
             e.printStackTrace();
             throw new RuntimeException("Não foi possível compilar os relatórios Jasper.", e);
+        }
+    }
+
+    private JasperReport compileReport(String path) throws IOException, JRException {
+        Resource resource = new ClassPathResource(path);
+        if (!resource.exists()) {
+            throw new IOException("Recurso não encontrado no classpath: " + path);
+        }
+
+        try (InputStream inputStream = resource.getInputStream()) {
+            return JasperCompileManager.compileReport(inputStream);
         }
     }
 
