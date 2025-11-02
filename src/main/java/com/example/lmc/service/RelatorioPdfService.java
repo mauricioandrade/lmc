@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class RelatorioPdfService {
@@ -25,34 +26,61 @@ public class RelatorioPdfService {
     @Autowired
     private LmcFolhaRepository lmcFolhaRepository;
 
-    private JasperReport jasperReportPrincipal;
-    private JasperReport jasperSubReportCompras;
-    private JasperReport jasperSubReportVendas;
-    private JasperReport jasperSubReportMedicoes;
+    // Cache dos relatórios compilados
+    private volatile JasperReport jasperReportPrincipal;
+    private volatile JasperReport jasperSubReportCompras;
+    private volatile JasperReport jasperSubReportVendas;
+    private volatile JasperReport jasperSubReportMedicoes;
 
-    // Construtor: Compila todos os relatórios na inicialização
-    public RelatorioPdfService() {
-        try {
-            this.jasperReportPrincipal = compileReport("reports/lmc_anexo_oficial.jrxml");
-            this.jasperSubReportCompras = compileReport("reports/sub_compras.jrxml");
-            this.jasperSubReportVendas = compileReport("reports/sub_vendas_bico.jrxml");
-            this.jasperSubReportMedicoes = compileReport("reports/sub_medicoes_tanque.jrxml");
+    // Método auxiliar para compilar apenas uma vez (lazy)
+    private JasperReport compileOnce(JasperReport cached, String path) {
+        if (cached == null) {
+            synchronized (this) {
+                if (cached == null) {
+                    cached = compileReport(path);
+                    // Atualiza o cache correto
+                    switch (path) {
+                        case "reports/lmc_anexo_oficial.jrxml" -> jasperReportPrincipal = cached;
+                        case "reports/sub_compras.jrxml" -> jasperSubReportCompras = cached;
+                        case "reports/sub_vendas_bico.jrxml" -> jasperSubReportVendas = cached;
+                        case "reports/sub_medicoes_tanque.jrxml" -> jasperSubReportMedicoes = cached;
+                    }
+                }
+            }
+        }
+        return cached;
+    }
 
+    private JasperReport getPrincipal() {
+        return compileOnce(jasperReportPrincipal, "reports/lmc_anexo_oficial.jrxml");
+    }
+
+    private JasperReport getSubCompras() {
+        return compileOnce(jasperSubReportCompras, "reports/sub_compras.jrxml");
+    }
+
+    private JasperReport getSubVendas() {
+        return compileOnce(jasperSubReportVendas, "reports/sub_vendas_bico.jrxml");
+    }
+
+    private JasperReport getSubMedicoes() {
+        return compileOnce(jasperSubReportMedicoes, "reports/sub_medicoes_tanque.jrxml");
+    }
+
+    private JasperReport compileReport(String path) {
+        Resource resource = new ClassPathResource(path);
+        if (!resource.exists()) {
+            throw new IllegalStateException("Recurso não encontrado no classpath: " + path);
+        }
+        try (InputStream in = resource.getInputStream()) {
+            return JasperCompileManager.compileReport(in);
         } catch (IOException | JRException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Não foi possível compilar os relatórios Jasper.", e);
+            throw new IllegalStateException("Falha ao compilar " + path, e);
         }
     }
 
-    private JasperReport compileReport(String path) throws IOException, JRException {
-        Resource resource = new ClassPathResource(path);
-        if (!resource.exists()) {
-            throw new IOException("Recurso não encontrado no classpath: " + path);
-        }
-
-        try (InputStream inputStream = resource.getInputStream()) {
-            return JasperCompileManager.compileReport(inputStream);
-        }
+    private static BigDecimal nz(BigDecimal v) {
+        return v == null ? BigDecimal.ZERO : v;
     }
 
     /**
@@ -60,85 +88,82 @@ public class RelatorioPdfService {
      * (dia/produto) é renderizada como uma página separada no mesmo PDF.
      */
     public byte[] gerarRelatorioPdf(LocalDate dataInicio, LocalDate dataFim) throws JRException {
+        // 1) Busca e ordena para gerar páginas previsíveis
+        Set<LmcFolha> folhasSet = lmcFolhaRepository.findByDataBetweenEager(dataInicio, dataFim);
+        List<LmcFolha> folhas = folhasSet.stream()
+                .sorted(Comparator
+                        .comparing(LmcFolha::getData)
+                        .thenComparing(f -> f.getProduto() == null ? "" : f.getProduto().getNome(), String.CASE_INSENSITIVE_ORDER))
+                .collect(Collectors.toList());
 
-        // 1. Busca todos os dados do banco
-        Set<LmcFolha> folhas = lmcFolhaRepository.findByDataBetweenEager(dataInicio, dataFim);
-
-        // 2. Cria uma lista para armazenar cada página preenchida
-        List<JasperPrint> jasperPrintList = new ArrayList<>();
-
-        // 3. Itera sobre cada folha (cada dia/produto)
-        for (LmcFolha folha : folhas) {
-            // Cria um mapa de parâmetros para ESTA folha
-            Map<String, Object> parameters = new HashMap<>();
-
-            // === Parâmetros da Empresa e Período ===
-            parameters.put("EMPRESA_NOME", "Teste");
-            parameters.put("EMPRESA_CNPJ", "32.458.917/0001-54");
-            parameters.put("EMPRESA_ENDERECO", "Teste, 000 - Teste, Itobi - SP");
-
-            // Converte LocalDate para java.util.Date (exigido pelo novo JRXML)
-            parameters.put("DATA", Date.valueOf(folha.getData()));
-            parameters.put("PERIODO_INICIO", Date.valueOf(dataInicio));
-            parameters.put("PERIODO_FIM", Date.valueOf(dataFim));
-            parameters.put("PRODUTO", folha.getProduto().getNome());
-
-            // === Parâmetros de Totais ===
-            // O novo relatório calcula o Estoque de Abertura (3.1) no Java
-            BigDecimal estoqueAberturaTotal = folha.getVolumeDisponivel().subtract(folha.getTotalRecebido());
-            parameters.put("ESTOQUE_ABERTURA_TOTAL", estoqueAberturaTotal);
-
-            parameters.put("VOLUME_RECEBIDO_TOTAL", folha.getTotalRecebido());
-            parameters.put("VOLUME_DISPONIVEL", folha.getVolumeDisponivel());
-            parameters.put("VENDAS_DIA_TOTAL", folha.getTotalVendasDia());
-            parameters.put("ESTOQUE_ESCRITURAL", folha.getEstoqueEscritural());
-            parameters.put("FECHAMENTO_FISICO_TOTAL", folha.getEstoqueFechamento()); // Total (7) e (9.1)
-            parameters.put("PERDAS_GANHOS", folha.getPerdasGanhos());
-            parameters.put("VALOR_VENDAS_DIA", folha.getValorVendasDia());
-            parameters.put("VALOR_VENDAS_MES", folha.getValorAcumuladoMes());
-
-            // === Parâmetros das Coleções (para os sub-relatórios) ===
-            parameters.put("LIST_COMPRAS", folha.getCompras());
-            parameters.put("LIST_VENDAS_BICO", folha.getVendasBico());
-            parameters.put("LIST_MEDICOES_TANQUE", folha.getMedicoesTanque());
-
-            // === Parâmetros dos Sub-relatórios Compilados ===
-            parameters.put("SUBREPORT_COMPRAS", this.jasperSubReportCompras);
-            parameters.put("SUBREPORT_VENDAS", this.jasperSubReportVendas);
-            parameters.put("SUBREPORT_MEDICOES", this.jasperSubReportMedicoes);
-
-            // 4. Preenche o relatório principal com os parâmetros
-            // Usamos JREmptyDataSource(1) porque o relatório principal é um template estático
-            // e não itera sobre uma coleção principal. O '1' garante que a banda <detail> renderize.
-            JasperPrint jasperPrint = JasperFillManager.fillReport(
-                    this.jasperReportPrincipal,
-                    parameters,
-                    new JREmptyDataSource(1)
-            );
-
-            // 5. Adiciona a página preenchida à lista
-            jasperPrintList.add(jasperPrint);
-        }
-
-        // 6. Se a lista estiver vazia, retorna um PDF vazio ou lança exceção
-        if (jasperPrintList.isEmpty()) {
-            // Você pode retornar um PDF de "Nenhum dado encontrado" ou lançar uma exceção
+        if (folhas.isEmpty()) {
             throw new JRException("Nenhum dado encontrado para o período selecionado.");
         }
 
-        // 7. Exporta a LISTA de JasperPrints para um ÚNICO PDF
+        // 2) Compila (lazy) o principal e subreports
+        JasperReport principal = getPrincipal();
+        JasperReport subCompras = getSubCompras();
+        JasperReport subVendas = getSubVendas();
+        JasperReport subMedicoes = getSubMedicoes();
+
+        // 3) Preenche uma página por folha
+        List<JasperPrint> prints = new ArrayList<>(folhas.size());
+        for (LmcFolha folha : folhas) {
+            Map<String, Object> p = new HashMap<>();
+
+            // Empresa / período
+            p.put("EMPRESA_NOME", "Teste");
+            p.put("EMPRESA_CNPJ", "32.458.917/0001-54");
+            p.put("EMPRESA_ENDERECO", "Teste, 000 - Teste, Itobi - SP");
+
+            p.put("DATA", Date.valueOf(folha.getData()));
+            p.put("PERIODO_INICIO", Date.valueOf(dataInicio));
+            p.put("PERIODO_FIM", Date.valueOf(dataFim));
+            p.put("PRODUTO", folha.getProduto() != null ? folha.getProduto().getNome() : "");
+
+            // Totais (safe)
+            BigDecimal totalRecebido = nz(folha.getTotalRecebido());
+            BigDecimal volumeDisponivel = nz(folha.getVolumeDisponivel());
+            BigDecimal vendasDia = nz(folha.getTotalVendasDia());
+            BigDecimal estoqueEscritural = nz(folha.getEstoqueEscritural());
+            BigDecimal fechamentoFisico = nz(folha.getEstoqueFechamento());
+            BigDecimal perdasGanhos = nz(folha.getPerdasGanhos());
+            BigDecimal valorVendasDia = nz(folha.getValorVendasDia());
+            BigDecimal valorVendasMes = nz(folha.getValorAcumuladoMes());
+
+            // Estoque de abertura
+            BigDecimal estoqueAbertura = volumeDisponivel.subtract(totalRecebido);
+
+            p.put("ESTOQUE_ABERTURA_TOTAL", estoqueAbertura);
+            p.put("VOLUME_RECEBIDO_TOTAL", totalRecebido);
+            p.put("VOLUME_DISPONIVEL", volumeDisponivel);
+            p.put("VENDAS_DIA_TOTAL", vendasDia);
+            p.put("ESTOQUE_ESCRITURAL", estoqueEscritural);
+            p.put("FECHAMENTO_FISICO_TOTAL", fechamentoFisico);
+            p.put("PERDAS_GANHOS", perdasGanhos);
+            p.put("VALOR_VENDAS_DIA", valorVendasDia);
+            p.put("VALOR_VENDAS_MES", valorVendasMes);
+
+            // Coleções (evita null)
+            p.put("SET_COMPRAS", Optional.ofNullable(folha.getCompras()).orElse(Collections.emptySet()));
+            p.put("SET_VENDAS_BICO", Optional.ofNullable(folha.getVendasBico()).orElse(Collections.emptySet()));
+            p.put("SET_MEDICOES_TANQUE", Optional.ofNullable(folha.getMedicoesTanque()).orElse(Collections.emptySet()));
+
+            // Subreports compilados
+            p.put("SUBREPORT_COMPRAS", subCompras);
+            p.put("SUBREPORT_VENDAS", subVendas);
+            p.put("SUBREPORT_MEDICOES", subMedicoes);
+
+            JasperPrint jp = JasperFillManager.fillReport(principal, p, new JREmptyDataSource(1));
+            prints.add(jp);
+        }
+
+        // 4) Exporta tudo em um único PDF
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         JRPdfExporter exporter = new JRPdfExporter();
-
-        // Define a lista de páginas como entrada
-        exporter.setExporterInput(SimpleExporterInput.getInstance(jasperPrintList));
-
-        // Define o stream de saída
+        exporter.setExporterInput(SimpleExporterInput.getInstance(prints));
         exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(baos));
-
-        // Executa a exportação (juntando todos os JPs em um PDF)
         exporter.exportReport();
-
         return baos.toByteArray();
     }
 }
