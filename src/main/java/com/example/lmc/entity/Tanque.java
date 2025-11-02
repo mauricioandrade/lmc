@@ -1,5 +1,7 @@
 package com.example.lmc.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -23,9 +25,11 @@ public class Tanque {
 
     @ManyToOne
     @JoinColumn(name = "produto_id", nullable = false)
+    @JsonBackReference("produto-tanque")
     private Produto produto;
 
     @OneToMany(mappedBy = "tanque")
+    @JsonManagedReference("tanque-bico")
     private List<Bico> bicos;
 
 

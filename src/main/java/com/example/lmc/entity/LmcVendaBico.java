@@ -1,5 +1,6 @@
 package com.example.lmc.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -16,6 +17,7 @@ public class LmcVendaBico {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lmc_folha_id", nullable = false)
+    @JsonBackReference("folha-venda")
     private LmcFolha lmcFolha;
 
     @ManyToOne

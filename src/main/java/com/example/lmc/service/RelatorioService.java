@@ -15,7 +15,7 @@ public class RelatorioService {
     private LmcFolhaRepository lmcFolhaRepository;
 
     public List<LmcFolha> gerarRelatorio(LocalDate inicio, LocalDate fim) {
-        return lmcFolhaRepository.findByDataBetween(inicio, fim);
+        return lmcFolhaRepository.findByDataBetweenEager(inicio, fim);
     }
 
     public List<LmcFolha> gerarRelatorioPorProduto(Long produtoId, LocalDate inicio, LocalDate fim) {

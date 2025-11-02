@@ -1,5 +1,6 @@
 package com.example.lmc.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -27,12 +28,15 @@ public class LmcFolha {
     private Produto produto;
 
     @OneToMany(mappedBy = "lmcFolha", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("folha-medicao")
     private List<LmcMedicaoTanque> medicoesTanque;
 
     @OneToMany(mappedBy = "lmcFolha", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("folha-compra")
     private List<LmcCompra> compras;
 
     @OneToMany(mappedBy = "lmcFolha", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("folha-venda")
     private List<LmcVendaBico> vendasBico;
 
     // --- Campos Calculados/Totalizados ---
