@@ -12,7 +12,9 @@
     <style name="cell" fontName="Helvetica" fontSize="9">
         <box><pen lineWidth="0.5"/></box>
     </style>
-    <style name="num" style="cell" textAlignment="Right" pattern="#,##0.00' L'"/>
+    <style name="num" style="cell" pattern="#,##0.00' L'">
+        <paragraph textAlignment="Right"/>
+    </style>
     <field name="tanque.numero" class="java.lang.String"/>
     <field name="estoqueAbertura" class="java.math.BigDecimal"/>
     <field name="estoqueFechamentoFisico" class="java.math.BigDecimal"/>

@@ -9,7 +9,9 @@
         <box><pen lineWidth="0.5"/></box>
     </style>
     <style name="cell"><box><pen lineWidth="0.5"/></box></style>
-    <style name="num" style="cell" textAlignment="Right" pattern="#,##0.00' L'"/>
+    <style name="num" style="cell" pattern="#,##0.00' L'">
+        <paragraph textAlignment="Right"/>
+    </style>
     <field name="bico.tanque.numero" class="java.lang.String"/>
     <field name="bico.numero" class="java.lang.String"/>
     <field name="encerranteFechamento" class="java.math.BigDecimal"/>

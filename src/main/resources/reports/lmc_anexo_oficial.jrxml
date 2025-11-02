@@ -17,6 +17,9 @@
     <style name="cell" fontName="Helvetica" fontSize="9">
         <box><pen lineWidth="0.5"/></box>
     </style>
+    <style name="cellRight" style="cell">
+        <paragraph textAlignment="Right"/>
+    </style>
     <style name="money" style="cellRight" pattern="R$ #,##0.00"/>
     <style name="liters" style="cellRight" pattern="#,##0.00' L'"/>
     <style name="small" fontName="Helvetica" fontSize="8"/>

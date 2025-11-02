@@ -9,7 +9,9 @@
         <box><pen lineWidth="0.5"/></box>
     </style>
     <style name="cell"><box><pen lineWidth="0.5"/></box></style>
-    <style name="num" style="cell" textAlignment="Right" pattern="#,##0.00' L'"/>
+    <style name="num" style="cell" pattern="#,##0.00' L'">
+        <paragraph textAlignment="Right"/>
+    </style>
     <field name="numeroDocumentoFiscal" class="java.lang.String"/>
     <field name="dataDocumento" class="java.util.Date"/>
     <field name="numeroTanqueDescarga" class="java.lang.String"/>
