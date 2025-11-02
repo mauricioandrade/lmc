@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="lmc_completo"
+              pageWidth="842"
+              pageHeight="595"
+              orientation="Landscape"
+              columnWidth="802"
+              leftMargin="20"
+              rightMargin="20"
+              topMargin="20"
+              bottomMargin="20"
+              uuid="a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890">
+
+    <parameter name="PERIODO" class="java.lang.String"/>
+    <parameter name="FOLHA_NUMERO" class="java.lang.String"/>
+    <parameter name="EMPRESA_NOME" class="java.lang.String"/>
+    <parameter name="EMPRESA_CNPJ" class="java.lang.String"/>
+    <parameter name="EMPRESA_ENDERECO" class="java.lang.String"/>
+
+    <field name="data" class="java.time.LocalDate"/>
+    <field name="produto.nome" class="java.lang.String"/>
+    <field name="volumeDisponivel" class="java.math.BigDecimal"/>
+    <field name="totalRecebido" class="java.math.BigDecimal"/>
+    <field name="totalVendasDia" class="java.math.BigDecimal"/>
+    <field name="estoqueEscritural" class="java.math.BigDecimal"/>
+    <field name="estoqueFechamento" class="java.math.BigDecimal"/>
+    <field name="perdasGanhos" class="java.math.BigDecimal"/>
+    <field name="valorVendasDia" class="java.math.BigDecimal"/>
+    <field name="valorAcumuladoMes" class="java.math.BigDecimal"/>
+    <field name="observacoes" class="java.lang.String"/>
+
+    <variable name="EstoqueAbertura" class="java.math.BigDecimal">
+        <variableExpression><![CDATA[
+            $F{volumeDisponivel}.subtract($F{totalRecebido})
+        ]]></variableExpression>
+    </variable>
+
+    <variable name="VariacaoPercentual" class="java.math.BigDecimal">
+        <variableExpression><![CDATA[
+            ($F{volumeDisponivel} != null && $F{volumeDisponivel}.compareTo(java.math.BigDecimal.ZERO) != 0) ?
+            $F{perdasGanhos}.abs().divide($F{volumeDisponivel}, 4, java.math.RoundingMode.HALF_UP).multiply(new java.math.BigDecimal(100)) :
+            java.math.BigDecimal.ZERO
+        ]]></variableExpression>
+    </variable>
+
+    <title>
+        <band height="120" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="802" height="25" uuid="b1c2d3e4-f5a6-7890-b1c2-d3e4f5a67891"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="16" isBold="true"/>
+                </textElement>
+                <text><![CDATA[LIVRO DE MOVIMENTAÇÃO DE COMBUSTÍVEIS (LMC)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="0" y="30" width="802" height="15" uuid="c1d2e3f4-a5b6-7890-c1d2-e3f4a5b67892"/>
+                <textElement textAlignment="Center">
+                    <font size="10"/>
+                </textElement>
+                <text><![CDATA[Resolução ANP nº 884, de 5 de setembro de 2022]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="50" width="802" height="15" uuid="d1e2f3a4-b5c6-7890-d1e2-f3a4b5c67893"/>
+                <textElement textAlignment="Center">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Período: " + $P{PERIODO}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="700" y="0" width="102" height="20" uuid="e1f2a3b4-c5d6-7890-e1f2-a3b4c5d67894"/>
+                <textElement textAlignment="Right">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA["fl. nº " + $P{FOLHA_NUMERO}]]></textFieldExpression>
+            </textField>
+            <rectangle>
+                <reportElement x="0" y="70" width="802" height="45" uuid="f1a2b3c4-d5e6-7890-f1a2-b3c4d5e67895"/>
+                <graphicElement>
+                    <pen lineWidth="0.5"/>
+                </graphicElement>
+            </rectangle>
+            <textField isBlankWhenNull="true">
+                <reportElement x="5" y="75" width="500" height="15" uuid="a2b3c4d5-e6f7-8901-a2b3-c4d5e6f78901"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Empresa: " + $P{EMPRESA_NOME}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="5" y="90" width="300" height="10" uuid="b2c3d4e5-f6a7-8901-b2c3-d4e5f6a78902"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA["CNPJ: " + $P{EMPRESA_CNPJ}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="5" y="100" width="600" height="10" uuid="c2d3e4f5-a6b7-8901-c2d3-e4f5a6b78903"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Endereço: " + $P{EMPRESA_ENDERECO}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <pageHeader>
+        <band height="30" splitType="Stretch">
+            <staticText>
+                <reportElement mode="Opaque" x="0" y="0" width="70" height="30" backcolor="#DEDEDE" uuid="d2e3f4a5-b6c7-8901-d2e3-f4a5b6c78904"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Data
+(2)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="70" y="0" width="100" height="30" backcolor="#DEDEDE" uuid="e2f3a4b5-c6d7-8901-e2f3-a4b5c6d78905"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Produto
+(1)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="170" y="0" width="90" height="30" backcolor="#DEDEDE" uuid="f2a3b4c5-d6e7-8901-f2a3-b4c5d6e78906"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Estoque
+Abertura (3.1)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="260" y="0" width="90" height="30" backcolor="#DEDEDE" uuid="a3b4c5d6-e7f8-9012-a3b4-c5d6e7f89012"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Volume
+Recebido (4.3)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="350" y="0" width="90" height="30" backcolor="#DEDEDE" uuid="b3c4d5e6-f7a8-9012-b3c4-d5e6f7a89013"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Vendas
+Dia (5.7)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="440" y="0" width="90" height="30" backcolor="#DEDEDE" uuid="c3d4e5f6-a7b8-9012-c3d4-e5f6a7b89014"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Estoque
+Escritural (6)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="530" y="0" width="90" height="30" backcolor="#DEDEDE" uuid="d3e4f5a6-b7c8-9012-d3e4-f5a6b7c89015"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Estoque
+Físico (7)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="620" y="0" width="90" height="30" backcolor="#DEDEDE" uuid="e3f4a5b6-c7d8-9012-e3f4-a5b6c7d89016"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Perdas/Ganhos
+(8)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="710" y="0" width="92" height="30" backcolor="#DEDEDE" uuid="f3a4b5c6-d7e8-9012-f3a4-b5c6d7e89017"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Variação
+% (13.5)]]></text>
+            </staticText>
+        </band>
+    </pageHeader>
+
+    <detail>
+        <band height="20" splitType="Stretch">
+            <textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+                <reportElement x="0" y="0" width="70" height="20" uuid="a4b5c6d7-e8f9-0123-a4b5-c6d7e8f90123"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{data}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="70" y="0" width="100" height="20" uuid="b4c5d6e7-f8a9-0123-b4c5-d6e7f8a90124"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Left" verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{produto.nome}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="170" y="0" width="90" height="20" uuid="c4d5e6f7-a8b9-0123-c4d5-e6f7a8b90125"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$V{EstoqueAbertura}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="260" y="0" width="90" height="20" uuid="d4e5f6a7-b8c9-0123-d4e5-f6a7b8c90126"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{totalRecebido}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="350" y="0" width="90" height="20" uuid="e4f5a6b7-c8d9-0123-e4f5-a6b7c8d90127"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{totalVendasDia}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="440" y="0" width="90" height="20" uuid="f4a5b6c7-d8e9-0123-f4a5-b6c7d8e90128"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{estoqueEscritural}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="530" y="0" width="90" height="20" uuid="a5b6c7d8-e9f0-1234-a5b6-c7d8e9f01234"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{estoqueFechamento}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="620" y="0" width="90" height="20" uuid="b5c6d7e8-f9a0-1234-b5c6-d7e8f9a01235"/>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{perdasGanhos}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00' %'" isBlankWhenNull="true">
+                <reportElement x="710" y="0" width="92" height="20" uuid="c5d6e7f8-a9b0-1234-c5d6-e7f8a9b01236">
+                    <printWhenExpression><![CDATA[$V{VariacaoPercentual}.compareTo(new java.math.BigDecimal("0.6")) > 0]]></printWhenExpression>
+                </reportElement>
+                <box padding="2"><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="8" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$V{VariacaoPercentual}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+    <pageFooter>
+        <band height="40" splitType="Stretch">
+            <line>
+                <reportElement x="0" y="0" width="802" height="1" uuid="d5e6f7a8-b9c0-1234-d5e6-f7a8b9c01237"/>
+            </line>
+            <staticText>
+                <reportElement x="0" y="10" width="400" height="25" uuid="e5f6a7b8-c9d0-1234-e5f6-a7b8c9d01238"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="7"/>
+                </textElement>
+                <text><![CDATA[11) Para uso do Revendedor | 12) Destinado à fiscalização da ANP e outros Órgãos Fiscais]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="650" y="10" width="100" height="25" uuid="f5a6b7c8-d9e0-1234-f5a6-b7c8d9e01239"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER} + " de"]]></textFieldExpression>
+            </textField>
+            <textField evaluationTime="Report">
+                <reportElement x="750" y="10" width="52" height="25" uuid="a6b7c8d9-e0f1-2345-a6b7-c8d9e0f12345"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+</jasperReport>
