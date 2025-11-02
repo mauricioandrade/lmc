@@ -4,14 +4,20 @@
               xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
               name="sub_vendas_bico" pageWidth="555" pageHeight="170" columnWidth="555"
               leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
-    <style name="base" isDefault="true" fontName="Helvetica" fontSize="9"/>
+
+    <!-- Fonte padrão global -->
+    <property name="net.sf.jasperreports.default.font.name" value="DejaVu Sans"/>
+
+    <!-- Estilos base (sem pdfEmbedded) -->
+    <style name="base" isDefault="true" fontName="DejaVu Sans" fontSize="9"/>
     <style name="header" style="base" isBold="true" mode="Opaque" backcolor="#DEDEDE">
         <box><pen lineWidth="0.5"/></box>
     </style>
-    <style name="cell"><box><pen lineWidth="0.5"/></box></style>
-    <style name="num" style="cell" pattern="#,##0.00' L'">
-        <paragraph textAlignment="Right"/>
+    <style name="cell" fontName="DejaVu Sans" fontSize="9">
+        <box><pen lineWidth="0.5"/></box>
     </style>
+    <style name="num" style="cell" pattern="#,##0.00' L'"/>
+
     <field name="bico.tanque.numero" class="java.lang.String"/>
     <field name="bico.numero" class="java.lang.String"/>
     <field name="encerranteFechamento" class="java.math.BigDecimal"/>
@@ -36,12 +42,18 @@
 
     <detail>
         <band height="18">
-            <textField><reportElement x="0" y="0" width="70" height="18" style="cell"/><textFieldExpression><![CDATA[$F{bico.tanque.numero}]]></textFieldExpression></textField>
-            <textField><reportElement x="70" y="0" width="70" height="18" style="cell"/><textFieldExpression><![CDATA[$F{bico.numero}]]></textFieldExpression></textField>
-            <textField pattern="#,##0"><reportElement x="140" y="0" width="120" height="18" style="num"/><textFieldExpression><![CDATA[$F{encerranteFechamento}]]></textFieldExpression></textField>
-            <textField pattern="#,##0"><reportElement x="260" y="0" width="120" height="18" style="num"/><textFieldExpression><![CDATA[$F{encerranteAbertura}]]></textFieldExpression></textField>
-            <textField pattern="#,##0.00' L'"><reportElement x="380" y="0" width="80" height="18" style="num"/><textFieldExpression><![CDATA[$F{afericoes}]]></textFieldExpression></textField>
-            <textField pattern="#,##0.00' L'"><reportElement x="460" y="0" width="95" height="18" style="num"/><textFieldExpression><![CDATA[$F{vendasBico}]]></textFieldExpression></textField>
+            <textField><reportElement x="0" y="0" width="70" height="18" style="cell"/>
+                <textFieldExpression><![CDATA[$F{bico.tanque.numero}]]></textFieldExpression></textField>
+            <textField><reportElement x="70" y="0" width="70" height="18" style="cell"/>
+                <textFieldExpression><![CDATA[$F{bico.numero}]]></textFieldExpression></textField>
+            <textField pattern="#,##0"><reportElement x="140" y="0" width="120" height="18" style="num"/>
+                <textElement textAlignment="Right"/><textFieldExpression><![CDATA[$F{encerranteFechamento}]]></textFieldExpression></textField>
+            <textField pattern="#,##0"><reportElement x="260" y="0" width="120" height="18" style="num"/>
+                <textElement textAlignment="Right"/><textFieldExpression><![CDATA[$F{encerranteAbertura}]]></textFieldExpression></textField>
+            <textField pattern="#,##0.00' L'"><reportElement x="380" y="0" width="80" height="18" style="num"/>
+                <textElement textAlignment="Right"/><textFieldExpression><![CDATA[$F{afericoes}]]></textFieldExpression></textField>
+            <textField pattern="#,##0.00' L'"><reportElement x="460" y="0" width="95" height="18" style="num"/>
+                <textElement textAlignment="Right"/><textFieldExpression><![CDATA[$F{vendasBico}]]></textFieldExpression></textField>
         </band>
     </detail>
 
@@ -49,8 +61,7 @@
         <band height="18">
             <staticText><reportElement x="365" y="0" width="95" height="18" style="header"/><text><![CDATA[5.7) Vendas no dia]]></text></staticText>
             <textField pattern="#,##0.00' L'"><reportElement x="460" y="0" width="95" height="18" style="num"/>
-                <textFieldExpression><![CDATA[$V{TotalVendasBico} == null ? java.math.BigDecimal.ZERO : $V{TotalVendasBico}]]></textFieldExpression>
-            </textField>
+                <textElement textAlignment="Right"/><textFieldExpression><![CDATA[$V{TotalVendasBico}==null?java.math.BigDecimal.ZERO:$V{TotalVendasBico}]]></textFieldExpression></textField>
         </band>
     </columnFooter>
 </jasperReport>

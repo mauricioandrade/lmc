@@ -9,20 +9,26 @@
               whenNoDataType="AllSectionsNoDetail"
               isIgnorePagination="false">
 
-    <style name="base" isDefault="true" fontName="Helvetica" fontSize="9"/>
-    <style name="label" fontName="Helvetica" fontSize="9" isBold="true"/>
-    <style name="header" fontName="Helvetica" fontSize="9" isBold="true" mode="Opaque" backcolor="#DEDEDE">
+    <!-- Fonte padrão global -->
+    <property name="net.sf.jasperreports.default.font.name" value="DejaVu Sans"/>
+
+    <!-- Estilos base com DejaVu e incorporação no PDF -->
+    <style name="base" isDefault="true" fontName="DejaVu Sans" fontSize="9" isPdfEmbedded="true"/>
+    <style name="label" fontName="DejaVu Sans" fontSize="9" isBold="true" isPdfEmbedded="true"/>
+    <style name="header" fontName="DejaVu Sans" fontSize="9" isBold="true" mode="Opaque" backcolor="#DEDEDE" isPdfEmbedded="true">
         <box><pen lineWidth="0.5"/></box>
     </style>
-    <style name="cell" fontName="Helvetica" fontSize="9">
+    <style name="cell" fontName="DejaVu Sans" fontSize="9" isPdfEmbedded="true">
         <box><pen lineWidth="0.5"/></box>
     </style>
-    <style name="cellRight" style="cell">
-        <paragraph textAlignment="Right"/>
-    </style>
+
+    <!-- Mantém style simples; alinhamento é feito no elemento quando necessário -->
+    <style name="cellRight" style="cell"/>
+
     <style name="money" style="cellRight" pattern="R$ #,##0.00"/>
     <style name="liters" style="cellRight" pattern="#,##0.00' L'"/>
-    <style name="small" fontName="Helvetica" fontSize="8"/>
+    <style name="small" fontName="DejaVu Sans" fontSize="8" isPdfEmbedded="true"/>
+
     <parameter name="EMPRESA_NOME" class="java.lang.String"/>
     <parameter name="EMPRESA_CNPJ" class="java.lang.String"/>
     <parameter name="EMPRESA_ENDERECO" class="java.lang.String"/>
@@ -149,6 +155,7 @@
                 </staticText>
                 <textField pattern="#,##0.00' L'">
                     <reportElement x="168" y="20" width="90" height="14" style="liters"/>
+                    <textElement textAlignment="Right"/>
                     <textFieldExpression><![CDATA[$P{ESTOQUE_ABERTURA_TOTAL}]]></textFieldExpression>
                 </textField>
 
@@ -159,6 +166,7 @@
                 </staticText>
                 <textField pattern="#,##0.00' L'">
                     <reportElement x="168" y="38" width="90" height="14" style="liters"/>
+                    <textElement textAlignment="Right"/>
                     <textFieldExpression><![CDATA[$P{VOLUME_RECEBIDO_TOTAL}]]></textFieldExpression>
                 </textField>
 
@@ -169,6 +177,7 @@
                 </staticText>
                 <textField pattern="#,##0.00' L'">
                     <reportElement x="462" y="20" width="90" height="14" style="liters"/>
+                    <textElement textAlignment="Right"/>
                     <textFieldExpression><![CDATA[$P{VOLUME_DISPONIVEL}]]></textFieldExpression>
                 </textField>
             </frame>
@@ -216,6 +225,7 @@
                 </staticText>
                 <textField pattern="#,##0.00' L'">
                     <reportElement x="128" y="20" width="90" height="14" style="liters"/>
+                    <textElement textAlignment="Right"/>
                     <textFieldExpression><![CDATA[$P{ESTOQUE_ESCRITURAL}]]></textFieldExpression>
                 </textField>
 
@@ -226,6 +236,7 @@
                 </staticText>
                 <textField pattern="#,##0.00' L'">
                     <reportElement x="352" y="20" width="90" height="14" style="liters"/>
+                    <textElement textAlignment="Right"/>
                     <textFieldExpression><![CDATA[$P{FECHAMENTO_FISICO_TOTAL}]]></textFieldExpression>
                 </textField>
 
@@ -236,6 +247,7 @@
                 </staticText>
                 <textField pattern="#,##0.00' L'">
                     <reportElement x="128" y="40" width="90" height="14" style="liters"/>
+                    <textElement textAlignment="Right"/>
                     <textFieldExpression><![CDATA[$P{PERDAS_GANHOS}]]></textFieldExpression>
                 </textField>
 
@@ -246,6 +258,7 @@
                 </staticText>
                 <textField pattern="#,##0.00' L'">
                     <reportElement x="352" y="40" width="90" height="14" style="liters"/>
+                    <textElement textAlignment="Right"/>
                     <textFieldExpression><![CDATA[$P{FECHAMENTO_FISICO_TOTAL}]]></textFieldExpression>
                 </textField>
             </frame>
@@ -281,6 +294,7 @@
                 </staticText>
                 <textField pattern="R$ #,##0.00">
                     <reportElement x="148" y="20" width="90" height="14" style="money"/>
+                    <textElement textAlignment="Right"/>
                     <textFieldExpression><![CDATA[$P{VALOR_VENDAS_DIA}]]></textFieldExpression>
                 </textField>
 
@@ -291,6 +305,7 @@
                 </staticText>
                 <textField pattern="R$ #,##0.00">
                     <reportElement x="392" y="20" width="90" height="14" style="money"/>
+                    <textElement textAlignment="Right"/>
                     <textFieldExpression><![CDATA[$P{VALOR_VENDAS_MES}]]></textFieldExpression>
                 </textField>
 
@@ -299,7 +314,7 @@
                     <textElement><font isBold="true"/></textElement>
                     <text><![CDATA[11) Para uso do Revendedor]]></text>
                 </staticText>
-                <textField isStretchWithOverflow="true">
+                <textField textAdjust="StretchHeight">
                     <reportElement x="6" y="54" width="178" height="24" style="cell"/>
                     <textFieldExpression><![CDATA[" "]]></textFieldExpression>
                 </textField>
@@ -309,7 +324,7 @@
                     <textElement><font isBold="true"/></textElement>
                     <text><![CDATA[12) Destinado à fiscalização]]></text>
                 </staticText>
-                <textField isStretchWithOverflow="true">
+                <textField textAdjust="StretchHeight">
                     <reportElement x="190" y="54" width="178" height="24" style="cell"/>
                     <textFieldExpression><![CDATA[" "]]></textFieldExpression>
                 </textField>
@@ -319,7 +334,7 @@
                     <textElement><font isBold="true"/></textElement>
                     <text><![CDATA[13) Observações]]></text>
                 </staticText>
-                <textField isStretchWithOverflow="true">
+                <textField textAdjust="StretchHeight">
                     <reportElement x="374" y="54" width="178" height="24" style="cell"/>
                     <textFieldExpression><![CDATA[" "]]></textFieldExpression>
                 </textField>
