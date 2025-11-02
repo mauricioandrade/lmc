@@ -9,20 +9,27 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface LmcFolhaRepository extends JpaRepository<LmcFolha, Long> {
 
     Optional<LmcFolha> findByDataAndProdutoId(LocalDate data, Long produtoId);
 
-    @Query("SELECT DISTINCT f FROM LmcFolha f " + // <-- ADICIONE DISTINCT AQUI
-            "JOIN FETCH f.produto " +
-            "JOIN FETCH f.medicoesTanque " +
+    @Query("SELECT DISTINCT f FROM LmcFolha f " +
+            "LEFT JOIN FETCH f.produto " +
+            "LEFT JOIN FETCH f.medicoesTanque mt " +
+            "LEFT JOIN FETCH mt.tanque " +
+            "LEFT JOIN FETCH f.vendasBico vb " +
+            "LEFT JOIN FETCH vb.bico b " +
+            "LEFT JOIN FETCH b.tanque " +
+            "LEFT JOIN FETCH f.compras c " +
+            "LEFT JOIN FETCH c.tanqueDescarga " +
             "WHERE f.data BETWEEN :dataInicio AND :dataFim " +
             "ORDER BY f.data, f.produto.nome")
-    List<LmcFolha> findByDataBetweenEager(
-            @Param("dataInicio") LocalDate dataInicio,
-            @Param("dataFim") LocalDate dataFim
+    Set<LmcFolha> findByDataBetweenEager(
+                                          @Param("dataInicio") LocalDate dataInicio,
+                                          @Param("dataFim") LocalDate dataFim
     );
 
     List<LmcFolha> findByDataBetween(LocalDate dataInicio, LocalDate dataFim);

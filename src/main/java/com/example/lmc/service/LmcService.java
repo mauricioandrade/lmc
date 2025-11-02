@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 @Service
 public class LmcService {
@@ -44,9 +45,9 @@ public class LmcService {
         folha.setData(request.getData());
         folha.setProduto(produto);
         folha.setObservacoes(request.getObservacoes());
-        folha.setMedicoesTanque(new ArrayList<>());
-        folha.setCompras(new ArrayList<>());
-        folha.setVendasBico(new ArrayList<>());
+        folha.setMedicoesTanque(new HashSet<>());
+        folha.setCompras(new HashSet<>());
+        folha.setVendasBico(new HashSet<>());
 
 
         BigDecimal totalEstoqueAbertura = BigDecimal.ZERO;

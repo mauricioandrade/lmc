@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="sub_compras" pageWidth="555" pageHeight="130" columnWidth="555"
+              leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+    <style name="base" isDefault="true" fontName="Helvetica" fontSize="9"/>
+    <style name="header" style="base" isBold="true" mode="Opaque" backcolor="#DEDEDE">
+        <box><pen lineWidth="0.5"/></box>
+    </style>
+    <style name="cell"><box><pen lineWidth="0.5"/></box></style>
+    <style name="num" style="cell" textAlignment="Right" pattern="#,##0.00' L'"/>
+    <field name="numeroDocumentoFiscal" class="java.lang.String"/>
+    <field name="dataDocumento" class="java.util.Date"/>
+    <field name="numeroTanqueDescarga" class="java.lang.String"/>
+    <field name="volumeRecebido" class="java.math.BigDecimal"/>
+
+    <variable name="TotalRecebido" class="java.math.BigDecimal" calculation="Sum">
+        <variableExpression><![CDATA[$F{volumeRecebido}]]></variableExpression>
+    </variable>
+
+    <columnHeader>
+        <band height="20">
+            <staticText><reportElement x="0" y="0" width="220" height="20" style="header"/><text><![CDATA[Nº da documentação fiscal (4)]]></text></staticText>
+            <staticText><reportElement x="220" y="0" width="110" height="20" style="header"/><text><![CDATA[Data]]></text></staticText>
+            <staticText><reportElement x="330" y="0" width="115" height="20" style="header"/><text><![CDATA[4.1) Nº tanque descarga]]></text></staticText>
+            <staticText><reportElement x="445" y="0" width="110" height="20" style="header"/><text><![CDATA[4.2) Volume recebido]]></text></staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="18">
+            <textField><reportElement x="0" y="0" width="220" height="18" style="cell"/><textFieldExpression><![CDATA[$F{numeroDocumentoFiscal}]]></textFieldExpression></textField>
+            <textField pattern="dd/MM/yyyy"><reportElement x="220" y="0" width="110" height="18" style="cell"/><textFieldExpression><![CDATA[$F{dataDocumento}]]></textFieldExpression></textField>
+            <textField><reportElement x="330" y="0" width="115" height="18" style="cell"/><textFieldExpression><![CDATA[$F{numeroTanqueDescarga}]]></textFieldExpression></textField>
+            <textField pattern="#,##0.00' L'"><reportElement x="445" y="0" width="110" height="18" style="num"/><textFieldExpression><![CDATA[$F{volumeRecebido}]]></textFieldExpression></textField>
+        </band>
+    </detail>
+
+    <columnFooter>
+        <band height="18">
+            <staticText><reportElement x="330" y="0" width="115" height="18" style="header"/><text><![CDATA[4.3) Total Recebido]]></text></staticText>
+            <textField pattern="#,##0.00' L'"><reportElement x="445" y="0" width="110" height="18" style="num"/>
+                <textFieldExpression><![CDATA[$V{TotalRecebido} == null ? java.math.BigDecimal.ZERO : $V{TotalRecebido}]]></textFieldExpression>
+            </textField>
+        </band>
+    </columnFooter>
+</jasperReport>

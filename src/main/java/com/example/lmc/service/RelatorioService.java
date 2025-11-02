@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class RelatorioService {
@@ -14,7 +15,7 @@ public class RelatorioService {
     @Autowired
     private LmcFolhaRepository lmcFolhaRepository;
 
-    public List<LmcFolha> gerarRelatorio(LocalDate inicio, LocalDate fim) {
+    public Set<LmcFolha> gerarRelatorio(LocalDate inicio, LocalDate fim) {
         return lmcFolhaRepository.findByDataBetweenEager(inicio, fim);
     }
 

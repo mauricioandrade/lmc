@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="LMC_Anexo_Oficial"
+              pageWidth="595" pageHeight="842"
+              columnWidth="555"
+              leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20"
+              whenNoDataType="AllSectionsNoDetail"
+              isIgnorePagination="false">
+
+    <style name="base" isDefault="true" fontName="Helvetica" fontSize="9"/>
+    <style name="label" fontName="Helvetica" fontSize="9" isBold="true"/>
+    <style name="header" fontName="Helvetica" fontSize="9" isBold="true" mode="Opaque" backcolor="#DEDEDE">
+        <box><pen lineWidth="0.5"/></box>
+    </style>
+    <style name="cell" fontName="Helvetica" fontSize="9">
+        <box><pen lineWidth="0.5"/></box>
+    </style>
+    <style name="money" style="cellRight" pattern="R$ #,##0.00"/>
+    <style name="liters" style="cellRight" pattern="#,##0.00' L'"/>
+    <style name="small" fontName="Helvetica" fontSize="8"/>
+    <parameter name="EMPRESA_NOME" class="java.lang.String"/>
+    <parameter name="EMPRESA_CNPJ" class="java.lang.String"/>
+    <parameter name="EMPRESA_ENDERECO" class="java.lang.String"/>
+    <parameter name="DATA" class="java.util.Date"/>
+    <parameter name="PERIODO_INICIO" class="java.util.Date"/>
+    <parameter name="PERIODO_FIM" class="java.util.Date"/>
+    <parameter name="PRODUTO" class="java.lang.String"/>
+
+    <parameter name="LIST_COMPRAS" class="java.util.Collection"/>
+    <parameter name="LIST_VENDAS_BICO" class="java.util.Collection"/>
+    <parameter name="LIST_MEDICOES_TANQUE" class="java.util.Collection"/>
+
+    <parameter name="SUBREPORT_COMPRAS" class="net.sf.jasperreports.engine.JasperReport"/>
+    <parameter name="SUBREPORT_VENDAS" class="net.sf.jasperreports.engine.JasperReport"/>
+    <parameter name="SUBREPORT_MEDICOES" class="net.sf.jasperreports.engine.JasperReport"/>
+
+    <parameter name="ESTOQUE_ABERTURA_TOTAL" class="java.math.BigDecimal"/>
+    <parameter name="VOLUME_RECEBIDO_TOTAL" class="java.math.BigDecimal"/>
+    <parameter name="VOLUME_DISPONIVEL" class="java.math.BigDecimal"/>
+    <parameter name="VENDAS_DIA_TOTAL" class="java.math.BigDecimal"/>
+    <parameter name="ESTOQUE_ESCRITURAL" class="java.math.BigDecimal"/>
+    <parameter name="FECHAMENTO_FISICO_TOTAL" class="java.math.BigDecimal"/>
+    <parameter name="PERDAS_GANHOS" class="java.math.BigDecimal"/>
+    <parameter name="VALOR_VENDAS_DIA" class="java.math.BigDecimal"/>
+    <parameter name="VALOR_VENDAS_MES" class="java.math.BigDecimal"/>
+
+    <title>
+        <band height="90">
+            <staticText>
+                <reportElement x="0" y="0" width="555" height="20"/>
+                <textElement textAlignment="Center"><font size="12" isBold="true"/></textElement>
+                <text><![CDATA[LIVRO DE MOVIMENTAÇÃO DE COMBUSTÍVEIS (LMC)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="0" y="20" width="555" height="14"/>
+                <textElement textAlignment="Center"><font size="9"/></textElement>
+                <text><![CDATA[Resolução ANP nº 884, de 5 de setembro de 2022]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="0" y="42" width="60" height="14"/>
+                <textElement><font isBold="true"/></textElement>
+                <text><![CDATA[Empresa:]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="60" y="42" width="495" height="14" style="cell"/>
+                <textFieldExpression><![CDATA[$P{EMPRESA_NOME}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="0" y="60" width="40" height="14"/>
+                <textElement><font isBold="true"/></textElement>
+                <text><![CDATA[CNPJ:]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="40" y="60" width="170" height="14" style="cell"/>
+                <textFieldExpression><![CDATA[$P{EMPRESA_CNPJ}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="215" y="60" width="70" height="14"/>
+                <textElement><font isBold="true"/></textElement>
+                <text><![CDATA[Endereço:]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="285" y="60" width="270" height="14" style="cell"/>
+                <textFieldExpression><![CDATA[$P{EMPRESA_ENDERECO}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <pageHeader>
+        <band height="24">
+            <frame>
+                <reportElement x="0" y="0" width="555" height="24" style="cell"/>
+                <staticText>
+                    <reportElement x="4" y="4" width="80" height="16" style="label"/>
+                    <text><![CDATA[Produto (1):]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="84" y="4" width="150" height="16" style="cell"/>
+                    <textFieldExpression><![CDATA[$P{PRODUTO}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="240" y="4" width="60" height="16" style="label"/>
+                    <text><![CDATA[Data (2):]]></text>
+                </staticText>
+                <textField pattern="dd/MM/yyyy">
+                    <reportElement x="302" y="4" width="70" height="16" style="cell"/>
+                    <textFieldExpression><![CDATA[$P{DATA}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="376" y="4" width="50" height="16" style="label"/>
+                    <text><![CDATA[Período:]]></text>
+                </staticText>
+                <textField pattern="dd/MM/yyyy">
+                    <reportElement x="428" y="4" width="60" height="16" style="cell"/>
+                    <textFieldExpression><![CDATA[$P{PERIODO_INICIO}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="490" y="4" width="10" height="16" style="label"/>
+                    <text><![CDATA[a]]></text>
+                </staticText>
+                <textField pattern="dd/MM/yyyy">
+                    <reportElement x="502" y="4" width="51" height="16" style="cell"/>
+                    <textFieldExpression><![CDATA[$P{PERIODO_FIM}]]></textFieldExpression>
+                </textField>
+            </frame>
+        </band>
+    </pageHeader>
+
+    <detail>
+        <band height="420">
+            <frame>
+                <reportElement x="0" y="0" width="555" height="66" style="cell"/>
+                <staticText>
+                    <reportElement x="0" y="0" width="555" height="14" style="header"/>
+                    <text><![CDATA[3) Estoque de Abertura / 4) Volume Recebido / 4.4) Volume Disponível]]></text>
+                </staticText>
+
+                <staticText>
+                    <reportElement x="6" y="20" width="160" height="14"/>
+                    <textElement><font isBold="true"/></textElement>
+                    <text><![CDATA[3.1) Estoque Abertura]]></text>
+                </staticText>
+                <textField pattern="#,##0.00' L'">
+                    <reportElement x="168" y="20" width="90" height="14" style="liters"/>
+                    <textFieldExpression><![CDATA[$P{ESTOQUE_ABERTURA_TOTAL}]]></textFieldExpression>
+                </textField>
+
+                <staticText>
+                    <reportElement x="6" y="38" width="160" height="14"/>
+                    <textElement><font isBold="true"/></textElement>
+                    <text><![CDATA[4.3) Total Recebido]]></text>
+                </staticText>
+                <textField pattern="#,##0.00' L'">
+                    <reportElement x="168" y="38" width="90" height="14" style="liters"/>
+                    <textFieldExpression><![CDATA[$P{VOLUME_RECEBIDO_TOTAL}]]></textFieldExpression>
+                </textField>
+
+                <staticText>
+                    <reportElement x="300" y="20" width="160" height="14"/>
+                    <textElement><font isBold="true"/></textElement>
+                    <text><![CDATA[4.4) Volume Disponível]]></text>
+                </staticText>
+                <textField pattern="#,##0.00' L'">
+                    <reportElement x="462" y="20" width="90" height="14" style="liters"/>
+                    <textFieldExpression><![CDATA[$P{VOLUME_DISPONIVEL}]]></textFieldExpression>
+                </textField>
+            </frame>
+
+            <frame>
+                <reportElement x="0" y="74" width="555" height="110" style="cell"/>
+                <staticText>
+                    <reportElement x="0" y="0" width="555" height="14" style="header"/>
+                    <text><![CDATA[4) Informações de Compras do Dia]]></text>
+                </staticText>
+                <subreport>
+                    <reportElement x="0" y="18" width="555" height="88"/>
+                    <subreportParameter name="SUBTITLE">
+                        <subreportParameterExpression><![CDATA["Volume Recebido no dia (em litros)"]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($P{LIST_COMPRAS})]]></dataSourceExpression>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_COMPRAS}]]></subreportExpression>
+                </subreport>
+            </frame>
+
+            <frame>
+                <reportElement x="0" y="190" width="555" height="150" style="cell"/>
+                <staticText>
+                    <reportElement x="0" y="0" width="555" height="14" style="header"/>
+                    <text><![CDATA[5) Vendas no dia (por bico)]]></text>
+                </staticText>
+                <subreport>
+                    <reportElement x="0" y="18" width="555" height="128"/>
+                    <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($P{LIST_VENDAS_BICO})]]></dataSourceExpression>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_VENDAS}]]></subreportExpression>
+                </subreport>
+            </frame>
+
+            <frame>
+                <reportElement x="0" y="346" width="555" height="74" style="cell"/>
+                <staticText>
+                    <reportElement x="0" y="0" width="555" height="14" style="header"/>
+                    <text><![CDATA[6) Estoque Escritural / 7) Estoque de Fechamento / 8) Perdas + Ganhos / 9) Fechamento Físico (9.1 Somatório)]]></text>
+                </staticText>
+
+                <staticText>
+                    <reportElement x="6" y="20" width="120" height="14"/>
+                    <textElement><font isBold="true"/></textElement>
+                    <text><![CDATA[6) Estoque Escritural]]></text>
+                </staticText>
+                <textField pattern="#,##0.00' L'">
+                    <reportElement x="128" y="20" width="90" height="14" style="liters"/>
+                    <textFieldExpression><![CDATA[$P{ESTOQUE_ESCRITURAL}]]></textFieldExpression>
+                </textField>
+
+                <staticText>
+                    <reportElement x="230" y="20" width="120" height="14"/>
+                    <textElement><font isBold="true"/></textElement>
+                    <text><![CDATA[7) Estoque Fechamento]]></text>
+                </staticText>
+                <textField pattern="#,##0.00' L'">
+                    <reportElement x="352" y="20" width="90" height="14" style="liters"/>
+                    <textFieldExpression><![CDATA[$P{FECHAMENTO_FISICO_TOTAL}]]></textFieldExpression>
+                </textField>
+
+                <staticText>
+                    <reportElement x="6" y="40" width="120" height="14"/>
+                    <textElement><font isBold="true"/></textElement>
+                    <text><![CDATA[8) Perdas + Ganhos]]></text>
+                </staticText>
+                <textField pattern="#,##0.00' L'">
+                    <reportElement x="128" y="40" width="90" height="14" style="liters"/>
+                    <textFieldExpression><![CDATA[$P{PERDAS_GANHOS}]]></textFieldExpression>
+                </textField>
+
+                <staticText>
+                    <reportElement x="230" y="40" width="120" height="14"/>
+                    <textElement><font isBold="true"/></textElement>
+                    <text><![CDATA[9.1) Soma Fechamento Físico]]></text>
+                </staticText>
+                <textField pattern="#,##0.00' L'">
+                    <reportElement x="352" y="40" width="90" height="14" style="liters"/>
+                    <textFieldExpression><![CDATA[$P{FECHAMENTO_FISICO_TOTAL}]]></textFieldExpression>
+                </textField>
+            </frame>
+        </band>
+    </detail>
+
+    <lastPageFooter>
+        <band height="220">
+            <frame>
+                <reportElement x="0" y="0" width="555" height="110" style="cell"/>
+                <staticText>
+                    <reportElement x="0" y="0" width="555" height="14" style="header"/>
+                    <text><![CDATA[9) Fechamento Físico por Tanque]]></text>
+                </staticText>
+                <subreport>
+                    <reportElement x="0" y="18" width="555" height="88"/>
+                    <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($P{LIST_MEDICOES_TANQUE})]]></dataSourceExpression>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_MEDICOES}]]></subreportExpression>
+                </subreport>
+            </frame>
+
+            <frame>
+                <reportElement x="0" y="118" width="555" height="84" style="cell"/>
+                <staticText>
+                    <reportElement x="0" y="0" width="555" height="14" style="header"/>
+                    <text><![CDATA[10) Valor das Vendas (R$) / 11) Para uso do Revendedor / 12) Destinado à fiscalização (ANP e outros) / 13) Observações]]></text>
+                </staticText>
+
+                <staticText>
+                    <reportElement x="6" y="20" width="140" height="14"/>
+                    <textElement><font isBold="true"/></textElement>
+                    <text><![CDATA[10.1) Valor do dia]]></text>
+                </staticText>
+                <textField pattern="R$ #,##0.00">
+                    <reportElement x="148" y="20" width="90" height="14" style="money"/>
+                    <textFieldExpression><![CDATA[$P{VALOR_VENDAS_DIA}]]></textFieldExpression>
+                </textField>
+
+                <staticText>
+                    <reportElement x="250" y="20" width="140" height="14"/>
+                    <textElement><font isBold="true"/></textElement>
+                    <text><![CDATA[10.2) Valor do mês]]></text>
+                </staticText>
+                <textField pattern="R$ #,##0.00">
+                    <reportElement x="392" y="20" width="90" height="14" style="money"/>
+                    <textFieldExpression><![CDATA[$P{VALOR_VENDAS_MES}]]></textFieldExpression>
+                </textField>
+
+                <staticText>
+                    <reportElement x="6" y="40" width="178" height="14"/>
+                    <textElement><font isBold="true"/></textElement>
+                    <text><![CDATA[11) Para uso do Revendedor]]></text>
+                </staticText>
+                <textField isStretchWithOverflow="true">
+                    <reportElement x="6" y="54" width="178" height="24" style="cell"/>
+                    <textFieldExpression><![CDATA[" "]]></textFieldExpression>
+                </textField>
+
+                <staticText>
+                    <reportElement x="190" y="40" width="178" height="14"/>
+                    <textElement><font isBold="true"/></textElement>
+                    <text><![CDATA[12) Destinado à fiscalização]]></text>
+                </staticText>
+                <textField isStretchWithOverflow="true">
+                    <reportElement x="190" y="54" width="178" height="24" style="cell"/>
+                    <textFieldExpression><![CDATA[" "]]></textFieldExpression>
+                </textField>
+
+                <staticText>
+                    <reportElement x="374" y="40" width="178" height="14"/>
+                    <textElement><font isBold="true"/></textElement>
+                    <text><![CDATA[13) Observações]]></text>
+                </staticText>
+                <textField isStretchWithOverflow="true">
+                    <reportElement x="374" y="54" width="178" height="24" style="cell"/>
+                    <textFieldExpression><![CDATA[" "]]></textFieldExpression>
+                </textField>
+            </frame>
+        </band>
+    </lastPageFooter>
+
+</jasperReport>

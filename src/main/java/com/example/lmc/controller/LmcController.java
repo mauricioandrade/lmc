@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/lmc")
@@ -40,11 +41,11 @@ public class LmcController {
     }
 
     @GetMapping("/relatorio")
-    public ResponseEntity<List<LmcFolha>> gerarRelatorio(
+    public ResponseEntity<Set<LmcFolha>> gerarRelatorio(
             @RequestParam("inicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
             @RequestParam("fim") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim
     ) {
-        List<LmcFolha> relatorio = relatorioService.gerarRelatorio(inicio, fim);
+        Set<LmcFolha> relatorio = relatorioService.gerarRelatorio(inicio, fim);
         return ResponseEntity.ok(relatorio);
     }
 
