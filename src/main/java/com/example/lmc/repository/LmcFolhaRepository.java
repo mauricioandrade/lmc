@@ -32,6 +32,21 @@ public interface LmcFolhaRepository extends JpaRepository<LmcFolha, Long> {
                                           @Param("dataFim") LocalDate dataFim
     );
 
+    @Query("SELECT f FROM LmcFolha f " +
+            "LEFT JOIN FETCH f.produto p " + // Adicionado fetch do produto
+            "LEFT JOIN FETCH f.medicoesTanque mt " +
+            "LEFT JOIN FETCH mt.tanque " +
+            "LEFT JOIN FETCH f.vendasBico vb " +
+            "LEFT JOIN FETCH vb.bico b " +
+            "LEFT JOIN FETCH b.tanque " +
+            "LEFT JOIN FETCH f.compras c " +
+            "LEFT JOIN FETCH c.tanqueDescarga " +
+            "WHERE f.data = :data AND f.produto.id = :produtoId")
+    Optional<LmcFolha> findByDataAndProdutoIdEager(
+            @Param("data") LocalDate data,
+            @Param("produtoId") Long produtoId
+    );
+
     List<LmcFolha> findByDataBetween(LocalDate dataInicio, LocalDate dataFim);
 
     List<LmcFolha> findByProdutoIdAndDataBetween(Long produtoId, LocalDate dataInicio, LocalDate dataFim);
