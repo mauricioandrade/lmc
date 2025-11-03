@@ -10,7 +10,12 @@ import com.example.lmc.repository.BicoRepository;
 import com.example.lmc.repository.ProdutoRepository;
 import com.example.lmc.repository.TanqueRepository;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -36,7 +41,11 @@ public class ConfiguracaoController {
 
     @GetMapping("/produtos")
     @Operation(summary = "Listar produtos", description = "Retorna todos os produtos cadastrados para configuração da LMC")
-    @ApiResponse(responseCode = "200", description = "Lista de produtos recuperada com sucesso")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de produtos recuperada com sucesso",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProdutoDTO.class)))),
+            @ApiResponse(responseCode = "500", description = "Erro interno ao listar produtos")
+    })
     public ResponseEntity<List<ProdutoDTO>> getProdutos() {
         List<Produto> produtos = produtoRepository.findAll();
 
@@ -49,8 +58,15 @@ public class ConfiguracaoController {
 
     @GetMapping("/tanques")
     @Operation(summary = "Listar tanques por produto", description = "Retorna os tanques associados ao produto informado")
-    @ApiResponse(responseCode = "200", description = "Lista de tanques recuperada com sucesso")
-    public ResponseEntity<List<TanqueDTO>> getTanquesPorProduto(@RequestParam Long produtoId) {
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de tanques recuperada com sucesso",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = TanqueDTO.class)))),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
+            @ApiResponse(responseCode = "404", description = "Nenhum tanque encontrado para o produto"),
+            @ApiResponse(responseCode = "500", description = "Erro interno ao listar tanques")
+    })
+    public ResponseEntity<List<TanqueDTO>> getTanquesPorProduto(
+            @Parameter(description = "Identificador do produto") @RequestParam Long produtoId) {
         List<Tanque> tanques = tanqueRepository.findByProdutoId(produtoId);
 
         List<TanqueDTO> tanquesDTO = tanques.stream()
@@ -62,8 +78,15 @@ public class ConfiguracaoController {
 
     @GetMapping("/bicos")
     @Operation(summary = "Listar bicos por tanque", description = "Retorna os bicos associados ao tanque informado")
-    @ApiResponse(responseCode = "200", description = "Lista de bicos recuperada com sucesso")
-    public ResponseEntity<List<BicoDTO>> getBicosPorTanque(@RequestParam Long tanqueId) {
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de bicos recuperada com sucesso",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = BicoDTO.class)))),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
+            @ApiResponse(responseCode = "404", description = "Nenhum bico encontrado para o tanque"),
+            @ApiResponse(responseCode = "500", description = "Erro interno ao listar bicos")
+    })
+    public ResponseEntity<List<BicoDTO>> getBicosPorTanque(
+            @Parameter(description = "Identificador do tanque") @RequestParam Long tanqueId) {
         List<Bico> bicos = bicoRepository.findByTanqueId(tanqueId);
 
         List<BicoDTO> bicosDTO = bicos.stream()
