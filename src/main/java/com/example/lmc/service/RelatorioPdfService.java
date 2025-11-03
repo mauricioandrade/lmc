@@ -26,19 +26,16 @@ public class RelatorioPdfService {
     @Autowired
     private LmcFolhaRepository lmcFolhaRepository;
 
-    // Cache dos relatórios compilados
     private volatile JasperReport jasperReportPrincipal;
     private volatile JasperReport jasperSubReportCompras;
     private volatile JasperReport jasperSubReportVendas;
     private volatile JasperReport jasperSubReportMedicoes;
 
-    // Método auxiliar para compilar apenas uma vez (lazy)
     private JasperReport compileOnce(JasperReport cached, String path) {
         if (cached == null) {
             synchronized (this) {
                 if (cached == null) {
                     cached = compileReport(path);
-                    // Atualiza o cache correto
                     switch (path) {
                         case "reports/lmc_anexo_oficial.jrxml" -> jasperReportPrincipal = cached;
                         case "reports/sub_compras.jrxml" -> jasperSubReportCompras = cached;
@@ -83,12 +80,7 @@ public class RelatorioPdfService {
         return v == null ? BigDecimal.ZERO : v;
     }
 
-    /**
-     * Gera um relatório PDF de LMC para o período, onde cada LmcFolha
-     * (dia/produto) é renderizada como uma página separada no mesmo PDF.
-     */
     public byte[] gerarRelatorioPdf(LocalDate dataInicio, LocalDate dataFim) throws JRException {
-        // 1) Busca e ordena para gerar páginas previsíveis
         Set<LmcFolha> folhasSet = lmcFolhaRepository.findByDataBetweenEager(dataInicio, dataFim);
         List<LmcFolha> folhas = folhasSet.stream()
                 .sorted(Comparator
@@ -100,18 +92,15 @@ public class RelatorioPdfService {
             throw new JRException("Nenhum dado encontrado para o período selecionado.");
         }
 
-        // 2) Compila (lazy) o principal e subreports
         JasperReport principal = getPrincipal();
         JasperReport subCompras = getSubCompras();
         JasperReport subVendas = getSubVendas();
         JasperReport subMedicoes = getSubMedicoes();
 
-        // 3) Preenche uma página por folha
         List<JasperPrint> prints = new ArrayList<>(folhas.size());
         for (LmcFolha folha : folhas) {
             Map<String, Object> p = new HashMap<>();
 
-            // Empresa / período
             p.put("EMPRESA_NOME", "Teste");
             p.put("EMPRESA_CNPJ", "32.458.917/0001-54");
             p.put("EMPRESA_ENDERECO", "Teste, 000 - Teste, Itobi - SP");
@@ -121,7 +110,6 @@ public class RelatorioPdfService {
             p.put("PERIODO_FIM", Date.valueOf(dataFim));
             p.put("PRODUTO", folha.getProduto() != null ? folha.getProduto().getNome() : "");
 
-            // Totais (safe)
             BigDecimal totalRecebido = nz(folha.getTotalRecebido());
             BigDecimal volumeDisponivel = nz(folha.getVolumeDisponivel());
             BigDecimal vendasDia = nz(folha.getTotalVendasDia());
@@ -131,7 +119,6 @@ public class RelatorioPdfService {
             BigDecimal valorVendasDia = nz(folha.getValorVendasDia());
             BigDecimal valorVendasMes = nz(folha.getValorAcumuladoMes());
 
-            // Estoque de abertura
             BigDecimal estoqueAbertura = volumeDisponivel.subtract(totalRecebido);
 
             p.put("ESTOQUE_ABERTURA_TOTAL", estoqueAbertura);
@@ -144,12 +131,10 @@ public class RelatorioPdfService {
             p.put("VALOR_VENDAS_DIA", valorVendasDia);
             p.put("VALOR_VENDAS_MES", valorVendasMes);
 
-            // Coleções (evita null)
             p.put("SET_COMPRAS", Optional.ofNullable(folha.getCompras()).orElse(Collections.emptySet()));
             p.put("SET_VENDAS_BICO", Optional.ofNullable(folha.getVendasBico()).orElse(Collections.emptySet()));
             p.put("SET_MEDICOES_TANQUE", Optional.ofNullable(folha.getMedicoesTanque()).orElse(Collections.emptySet()));
 
-            // Subreports compilados
             p.put("SUBREPORT_COMPRAS", subCompras);
             p.put("SUBREPORT_VENDAS", subVendas);
             p.put("SUBREPORT_MEDICOES", subMedicoes);
@@ -158,7 +143,6 @@ public class RelatorioPdfService {
             prints.add(jp);
         }
 
-        // 4) Exporta tudo em um único PDF
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         JRPdfExporter exporter = new JRPdfExporter();
         exporter.setExporterInput(SimpleExporterInput.getInstance(prints));

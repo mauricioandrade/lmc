@@ -33,7 +33,7 @@ public interface LmcFolhaRepository extends JpaRepository<LmcFolha, Long> {
     );
 
     @Query("SELECT f FROM LmcFolha f " +
-            "LEFT JOIN FETCH f.produto p " + // Adicionado fetch do produto
+            "LEFT JOIN FETCH f.produto p " +
             "LEFT JOIN FETCH f.medicoesTanque mt " +
             "LEFT JOIN FETCH mt.tanque " +
             "LEFT JOIN FETCH f.vendasBico vb " +

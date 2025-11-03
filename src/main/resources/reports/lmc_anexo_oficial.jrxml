@@ -9,10 +9,8 @@
               whenNoDataType="AllSectionsNoDetail"
               isIgnorePagination="false">
 
-    <!-- Fonte padrão global -->
     <property name="net.sf.jasperreports.default.font.name" value="DejaVu Sans"/>
 
-    <!-- Estilos base com DejaVu e incorporação no PDF -->
     <style name="base" isDefault="true" fontName="DejaVu Sans" fontSize="9" isPdfEmbedded="true"/>
     <style name="label" fontName="DejaVu Sans" fontSize="9" isBold="true" isPdfEmbedded="true"/>
     <style name="header" fontName="DejaVu Sans" fontSize="9" isBold="true" mode="Opaque" backcolor="#DEDEDE" isPdfEmbedded="true">
@@ -22,7 +20,6 @@
         <box><pen lineWidth="0.5"/></box>
     </style>
 
-    <!-- Mantém style simples; alinhamento é feito no elemento quando necessário -->
     <style name="cellRight" style="cell"/>
 
     <style name="money" style="cellRight" pattern="R$ #,##0.00"/>

@@ -45,8 +45,6 @@ public class LmcFolha {
     @JsonManagedReference("folha-venda")
     private Set<LmcVendaBico> vendasBico;
 
-    // --- Campos Calculados/Totalizados ---
-
     @Column(name = "total_recebido", precision = 19, scale = 3)
     private BigDecimal totalRecebido;
 
