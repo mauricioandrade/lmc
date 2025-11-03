@@ -51,24 +51,24 @@ public class DataInitializer implements CommandLineRunner {
 
 
             Tanque tq1_gasolina = new Tanque();
-            tq1_gasolina.setNumero("TQ-01"); // Tanque 1: Gasolina
+            tq1_gasolina.setNumero("TQ-01");
             tq1_gasolina.setCapacidadeNominal(new BigDecimal("20000.00"));
-            tq1_gasolina.setProduto(gasolina); // Associa ao produto Gasolina
+            tq1_gasolina.setProduto(gasolina);
 
             Tanque tq2_etanol = new Tanque();
-            tq2_etanol.setNumero("TQ-02"); // Tanque 2: Etanol
+            tq2_etanol.setNumero("TQ-02");
             tq2_etanol.setCapacidadeNominal(new BigDecimal("20000.00"));
-            tq2_etanol.setProduto(etanol); // Associa ao produto Etanol
+            tq2_etanol.setProduto(etanol);
 
             Tanque tq3_dieselS500 = new Tanque();
-            tq3_dieselS500.setNumero("TQ-03"); // Tanque 3: Diesel S500
+            tq3_dieselS500.setNumero("TQ-03");
             tq3_dieselS500.setCapacidadeNominal(new BigDecimal("15000.00"));
-            tq3_dieselS500.setProduto(dieselS500); // Associa ao produto Diesel S500
+            tq3_dieselS500.setProduto(dieselS500);
 
             Tanque tq4_dieselS10 = new Tanque();
-            tq4_dieselS10.setNumero("TQ-04"); // Tanque 4: Diesel S-10
+            tq4_dieselS10.setNumero("TQ-04");
             tq4_dieselS10.setCapacidadeNominal(new BigDecimal("15000.00"));
-            tq4_dieselS10.setProduto(dieselS10); // Associa ao produto Diesel S-10
+            tq4_dieselS10.setProduto(dieselS10);
 
 
             tanqueRepository.saveAll(List.of(tq1_gasolina, tq2_etanol, tq3_dieselS500, tq4_dieselS10));

@@ -5,10 +5,8 @@
               name="sub_compras" pageWidth="555" pageHeight="130" columnWidth="555"
               leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
 
-    <!-- Fonte padrão global -->
     <property name="net.sf.jasperreports.default.font.name" value="DejaVu Sans"/>
 
-    <!-- Estilos com DejaVu e incorporação no PDF -->
     <style name="base" isDefault="true" fontName="DejaVu Sans" fontSize="9" isPdfEmbedded="true"/>
     <style name="header" style="base" isBold="true" mode="Opaque" backcolor="#DEDEDE" isPdfEmbedded="true">
         <box><pen lineWidth="0.5"/></box>
@@ -17,7 +15,6 @@
         <box><pen lineWidth="0.5"/></box>
     </style>
 
-    <!-- Estilo numérico (alinhamento no elemento) -->
     <style name="num" style="cell" pattern="#,##0.00' L'"/>
 
     <field name="numeroDocumentoFiscal" class="java.lang.String"/>

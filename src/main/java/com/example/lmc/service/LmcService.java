@@ -2,7 +2,7 @@ package com.example.lmc.service;
 
 import com.example.lmc.dto.LmcFolhaRequestDTO;
 import com.example.lmc.entity.*;
-import com.example.lmc.repository.*; // Importa todos os repositórios
+import com.example.lmc.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,13 +12,12 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.Set; // Importe java.util.Set
+import java.util.Set;
 
 @Service
-@Transactional // Garante que as coleções lazy possam ser carregadas
+@Transactional
 public class LmcService {
 
-    // --- Injeção por Construtor (Melhor Prática) ---
     private final LmcFolhaRepository lmcFolhaRepository;
     private final ProdutoRepository produtoRepository;
     private final TanqueRepository tanqueRepository;
@@ -62,8 +61,6 @@ public class LmcService {
         folha.setMedicoesTanque(new HashSet<>());
         folha.setCompras(new HashSet<>());
         folha.setVendasBico(new HashSet<>());
-
-
         for (LmcFolhaRequestDTO.MedicaoTanqueDTO medicaoDTO : request.getMedicoes()) {
             Tanque tanque = tanqueRepository.findById(medicaoDTO.getTanqueId())
                     .orElseThrow(() -> new EntityNotFoundException("Tanque não encontrado"));
@@ -112,8 +109,6 @@ public class LmcService {
             folha.getVendasBico().add(venda);
         }
 
-        // --- MUDANÇA: Chama o método privado de recálculo ---
-        // A folha é salva dentro deste método
         recalcularEValidarTotais(folha);
 
         BigDecimal acumuladoAnterior = lmcFolhaRepository
@@ -130,19 +125,15 @@ public class LmcService {
                 acumuladoAnterior.add(folha.getValorVendasDia())
         );
 
-        // Salva novamente para atualizar o ValorAcumuladoMes
         return lmcFolhaRepository.save(folha);
     }
 
-    // --- NOVO MÉTODO (GET) ---
     @Transactional(readOnly = true)
     public LmcFolha buscarFolhaPorDataEProduto(LocalDate data, Long produtoId) {
-        // Usa o método Eager que criamos no repositório
         return lmcFolhaRepository.findByDataAndProdutoIdEager(data, produtoId)
                 .orElseThrow(() -> new EntityNotFoundException("Nenhuma folha LMC encontrada para esta data e produto."));
     }
 
-    // --- NOVOS MÉTODOS (UPDATE) ---
     @Transactional
     public LmcMedicaoTanque atualizarMedicaoTanque(Long id, LmcFolhaRequestDTO.MedicaoTanqueDTO medicaoDTO) {
         LmcMedicaoTanque medicaoExistente = medicaoTanqueRepository.findById(id)
@@ -207,7 +198,6 @@ public class LmcService {
         return vendaSalva;
     }
 
-    // --- NOVO MÉTODO (ADICIONAR ITEM) ---
     @Transactional
     public LmcMedicaoTanque adicionarMedicaoTanque(Long folhaId, LmcFolhaRequestDTO.MedicaoTanqueDTO medicaoDTO) {
         LmcFolha folha = lmcFolhaRepository.findById(folhaId)
@@ -217,14 +207,13 @@ public class LmcService {
                 .orElseThrow(() -> new EntityNotFoundException("Tanque não encontrado"));
 
         LmcMedicaoTanque novaMedicao = new LmcMedicaoTanque();
-        novaMedicao.setLmcFolha(folha); // Associa ao Pai
+        novaMedicao.setLmcFolha(folha);
         novaMedicao.setTanque(tanque);
         novaMedicao.setEstoqueAbertura(medicaoDTO.getEstoqueAbertura());
         novaMedicao.setEstoqueFechamentoFisico(medicaoDTO.getEstoqueFechamentoFisico());
 
         LmcMedicaoTanque medicaoSalva = medicaoTanqueRepository.save(novaMedicao);
 
-        // Adiciona na coleção (importante para o recálculo)
         folha.getMedicoesTanque().add(medicaoSalva);
 
         recalcularEValidarTotais(folha);
@@ -232,20 +221,16 @@ public class LmcService {
         return medicaoSalva;
     }
 
-    // TODO: Adicionar métodos "adicionarCompra" e "adicionarVenda" seguindo a mesma lógica acima.
-
-    // --- NOVOS MÉTODOS (DELETE) ---
-
     @Transactional
     public void deletarMedicaoTanque(Long id) {
         LmcMedicaoTanque medicao = medicaoTanqueRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Medição não encontrada: " + id));
-        LmcFolha folha = medicao.getLmcFolha(); // Pega a referência ANTES de deletar
+        LmcFolha folha = medicao.getLmcFolha();
 
-        folha.getMedicoesTanque().remove(medicao); // Remove da coleção
-        medicaoTanqueRepository.delete(medicao); // Deleta do banco
+        folha.getMedicoesTanque().remove(medicao);
+        medicaoTanqueRepository.delete(medicao);
 
-        recalcularEValidarTotais(folha); // Recalcula
+        recalcularEValidarTotais(folha);
     }
 
     @Transactional
@@ -272,22 +257,17 @@ public class LmcService {
         recalcularEValidarTotais(folha);
     }
 
-
-    // --- MÉTODO PRIVADO DE CÁLCULO (O CÉREBRO) ---
     private void recalcularEValidarTotais(LmcFolha folha) {
 
         BigDecimal totalEstoqueAbertura = BigDecimal.ZERO;
         BigDecimal totalEstoqueFechamento = BigDecimal.ZERO;
 
-        // --- MUDANÇA: Busca os dados direto do BD para garantir consistência ---
-        // (Isso evita problemas caso a coleção 'folha.getMedicoesTanque()' esteja desatualizada)
         Set<LmcMedicaoTanque> medicoes = medicaoTanqueRepository.findByLmcFolhaId(folha.getId());
         for (LmcMedicaoTanque medicao : medicoes) {
             totalEstoqueAbertura = totalEstoqueAbertura.add(medicao.getEstoqueAbertura());
             totalEstoqueFechamento = totalEstoqueFechamento.add(medicao.getEstoqueFechamentoFisico());
         }
-        folha.setEstoqueFechamento(totalEstoqueFechamento); // (Campo 7 / 9.1)
-
+        folha.setEstoqueFechamento(totalEstoqueFechamento);
 
         BigDecimal totalRecebido = BigDecimal.ZERO;
         Set<LmcCompra> compras = compraRepository.findByLmcFolhaId(folha.getId());
@@ -298,10 +278,8 @@ public class LmcService {
         }
         folha.setTotalRecebido(totalRecebido);
 
-
         BigDecimal volumeDisponivel = totalEstoqueAbertura.add(totalRecebido);
         folha.setVolumeDisponivel(volumeDisponivel);
-
 
         BigDecimal totalVendasDia = BigDecimal.ZERO;
         BigDecimal valorVendasDia = BigDecimal.ZERO;
@@ -309,7 +287,6 @@ public class LmcService {
 
         if (vendas != null) {
             for (LmcVendaBico venda : vendas) {
-                // Garante que o valor da venda está correto
                 BigDecimal vendasBicoCalculada = new BigDecimal(venda.getEncerranteFechamento())
                         .subtract(new BigDecimal(venda.getEncerranteAbertura()))
                         .subtract(venda.getAfericoes());
@@ -325,14 +302,11 @@ public class LmcService {
         folha.setTotalVendasDia(totalVendasDia);
         folha.setValorVendasDia(valorVendasDia.setScale(2, RoundingMode.HALF_UP));
 
-
         BigDecimal estoqueEscritural = volumeDisponivel.subtract(totalVendasDia);
         folha.setEstoqueEscritural(estoqueEscritural);
 
-
         BigDecimal perdasGanhos = totalEstoqueFechamento.subtract(estoqueEscritural);
         folha.setPerdasGanhos(perdasGanhos);
-
 
         if (volumeDisponivel.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal variacaoPercentual = perdasGanhos.abs()
@@ -341,23 +315,15 @@ public class LmcService {
 
             if (variacaoPercentual.compareTo(VARIACAO_PERMITIDA_PERCENTUAL) > 0) {
                 if (folha.getObservacoes() == null || folha.getObservacoes().trim().isEmpty()) {
-                    // Só lança a exceção se for uma *nova* folha (sem ID)
                     if (folha.getId() == null) {
                         throw new RuntimeException("Variação de estoque superior a 0.6% (" +
                                 variacaoPercentual.setScale(3, RoundingMode.HALF_UP) +
                                 "%). O campo Observações (13.5) é obrigatório.");
                     }
-                    // Se for uma atualização, apenas registra o aviso (ou deixa passar)
-                    // Você pode adicionar um log aqui se quiser
                 }
             }
         }
 
-        // Salva a folha principal com os totais recalculados
         lmcFolhaRepository.save(folha);
-
-        // TODO: A lógica de recálculo do ValorAcumuladoMes (10.2) precisa ser
-        // chamada separadamente, pois ela afeta TODAS as folhas futuras no mês.
-        // Por enquanto, ela só funciona na criação.
     }
 }

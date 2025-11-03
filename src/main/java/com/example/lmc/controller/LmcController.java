@@ -30,7 +30,6 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/lmc")
-// --- MUDANÇA: Adicionado PUT, DELETE, OPTIONS ---
 @CrossOrigin(
         origins = "http://localhost:5173",
         methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS}
@@ -111,7 +110,6 @@ public class LmcController {
         }
     }
 
-    // --- MUDANÇA: NOVO ENDPOINT (ADICIONAR MEDIÇÃO) ---
     @PostMapping("/folhas/{folhaId}/medicoes")
     @Operation(summary = "Adicionar nova medição", description = "Adiciona uma nova medição de tanque a uma folha existente")
     public ResponseEntity<LmcMedicaoTanque> adicionarMedicao(
@@ -121,13 +119,12 @@ public class LmcController {
         LmcMedicaoTanque medicaoSalva = lmcService.adicionarMedicaoTanque(folhaId, medicaoDTO);
         return new ResponseEntity<>(medicaoSalva, HttpStatus.CREATED);
     }
-    // --- FIM DA MUDANÇA ---
 
     @PutMapping("/medicoes/{id}")
     @Operation(summary = "Atualizar medição de tanque", description = "Atualiza uma medição de tanque e recalcula a folha")
     public ResponseEntity<LmcMedicaoTanque> atualizarMedicao(
             @PathVariable Long id,
-            @Valid @RequestBody LmcFolhaRequestDTO.MedicaoTanqueDTO medicaoDTO) { // Usa DTO
+            @Valid @RequestBody LmcFolhaRequestDTO.MedicaoTanqueDTO medicaoDTO) {
 
         LmcMedicaoTanque medicao = lmcService.atualizarMedicaoTanque(id, medicaoDTO);
         return ResponseEntity.ok(medicao);
@@ -144,7 +141,7 @@ public class LmcController {
     @Operation(summary = "Atualizar compra", description = "Atualiza uma compra e recalcula a folha")
     public ResponseEntity<LmcCompra> atualizarCompra(
             @PathVariable Long id,
-            @Valid @RequestBody LmcFolhaRequestDTO.CompraDTO compraDTO) { // Usa DTO
+            @Valid @RequestBody LmcFolhaRequestDTO.CompraDTO compraDTO) {
 
         LmcCompra compra = lmcService.atualizarCompra(id, compraDTO);
         return ResponseEntity.ok(compra);
@@ -161,7 +158,7 @@ public class LmcController {
     @Operation(summary = "Atualizar venda de bico", description = "Atualiza uma venda de bico e recalcula a folha")
     public ResponseEntity<LmcVendaBico> atualizarVenda(
             @PathVariable Long id,
-            @Valid @RequestBody LmcFolhaRequestDTO.VendaBicoDTO vendaDTO) { // Usa DTO
+            @Valid @RequestBody LmcFolhaRequestDTO.VendaBicoDTO vendaDTO) {
 
         LmcVendaBico venda = lmcService.atualizarVenda(id, vendaDTO);
         return ResponseEntity.ok(venda);
