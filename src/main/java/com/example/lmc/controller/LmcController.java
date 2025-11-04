@@ -28,6 +28,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.Map; // <-- 1. ADICIONE ESTE IMPORT
 import java.util.Set;
 
 @RestController
@@ -52,12 +53,7 @@ public class LmcController {
 
     @PostMapping
     @Operation(summary = "Criar folha diária", description = "Registra uma nova folha LMC diária com medições, vendas e compras")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Folha criada com sucesso",
-                    content = @Content(schema = @Schema(implementation = LmcFolha.class))),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos para criação da folha"),
-            @ApiResponse(responseCode = "500", description = "Erro interno ao salvar a folha")
-    })
+    // ... (ApiResponses)
     public ResponseEntity<LmcFolha> salvarFolha(
             @Valid @RequestBody LmcFolhaRequestDTO requestDTO
     ) {
@@ -67,13 +63,7 @@ public class LmcController {
 
     @GetMapping("/folha")
     @Operation(summary = "Buscar folha por data e produto", description = "Busca uma única folha LMC (e seus dados) pela data e identificador do produto informado")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Folha encontrada",
-                    content = @Content(schema = @Schema(implementation = LmcFolha.class))),
-            @ApiResponse(responseCode = "400", description = "Parâmetros de consulta inválidos"),
-            @ApiResponse(responseCode = "404", description = "Folha não encontrada"),
-            @ApiResponse(responseCode = "500", description = "Erro interno ao buscar a folha")
-    })
+    // ... (ApiResponses)
     public ResponseEntity<LmcFolha> buscarFolhaParaEdicao(
             @Parameter(description = "Data da folha a ser consultada", example = "2024-01-15")
             @RequestParam("data") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data,
@@ -90,12 +80,7 @@ public class LmcController {
 
     @GetMapping("/relatorio")
     @Operation(summary = "Gerar relatório em JSON", description = "Gera o relatório consolidado de folhas no período informado")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Relatório gerado com sucesso",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = LmcFolha.class)))),
-            @ApiResponse(responseCode = "400", description = "Parâmetros de período inválidos"),
-            @ApiResponse(responseCode = "500", description = "Erro interno ao gerar relatório")
-    })
+    // ... (ApiResponses)
     public ResponseEntity<Set<LmcFolha>> gerarRelatorio(
             @Parameter(description = "Data inicial do período", example = "2024-01-01")
             @RequestParam("inicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
@@ -108,14 +93,7 @@ public class LmcController {
 
     @GetMapping("/relatorio/pdf")
     @Operation(summary = "Gerar relatório em PDF", description = "Exporta o relatório LMC consolidado em formato PDF para o período informado")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Relatório em PDF gerado com sucesso",
-                    content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE,
-                            schema = @Schema(type = "string", format = "binary"))),
-            @ApiResponse(responseCode = "204", description = "Nenhum dado encontrado para o período informado"),
-            @ApiResponse(responseCode = "400", description = "Parâmetros de período inválidos"),
-            @ApiResponse(responseCode = "500", description = "Erro interno ao gerar relatório")
-    })
+    // ... (ApiResponses)
     public ResponseEntity<byte[]> gerarRelatorioPdf(
             @Parameter(description = "Data inicial do período", example = "2024-01-01")
             @RequestParam("inicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
@@ -145,15 +123,11 @@ public class LmcController {
         }
     }
 
+    // --- ENDPOINTS DE MEDIÇÃO ---
+
     @PostMapping("/folhas/{folhaId}/medicoes")
     @Operation(summary = "Adicionar nova medição", description = "Adiciona uma nova medição de tanque a uma folha existente")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Medição registrada com sucesso",
-                    content = @Content(schema = @Schema(implementation = LmcMedicaoTanque.class))),
-            @ApiResponse(responseCode = "400", description = "Dados de medição inválidos"),
-            @ApiResponse(responseCode = "404", description = "Folha não encontrada"),
-            @ApiResponse(responseCode = "500", description = "Erro interno ao adicionar medição")
-    })
+    // ... (ApiResponses)
     public ResponseEntity<LmcMedicaoTanque> adicionarMedicao(
             @Parameter(description = "Identificador da folha")
             @PathVariable Long folhaId,
@@ -165,13 +139,7 @@ public class LmcController {
 
     @PutMapping("/medicoes/{id}")
     @Operation(summary = "Atualizar medição de tanque", description = "Atualiza uma medição de tanque e recalcula a folha")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Medição atualizada com sucesso",
-                    content = @Content(schema = @Schema(implementation = LmcMedicaoTanque.class))),
-            @ApiResponse(responseCode = "400", description = "Dados de medição inválidos"),
-            @ApiResponse(responseCode = "404", description = "Medição não encontrada"),
-            @ApiResponse(responseCode = "500", description = "Erro interno ao atualizar medição")
-    })
+    // ... (ApiResponses)
     public ResponseEntity<LmcMedicaoTanque> atualizarMedicao(
             @Parameter(description = "Identificador da medição")
             @PathVariable Long id,
@@ -183,11 +151,7 @@ public class LmcController {
 
     @DeleteMapping("/medicoes/{id}")
     @Operation(summary = "Deletar medição de tanque", description = "Deleta uma medição de tanque e recalcula a folha")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Medição removida com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Medição não encontrada"),
-            @ApiResponse(responseCode = "500", description = "Erro interno ao remover medição")
-    })
+    // ... (ApiResponses)
     public ResponseEntity<Void> deletarMedicao(
             @Parameter(description = "Identificador da medição")
             @PathVariable Long id) {
@@ -195,15 +159,31 @@ public class LmcController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/compras/{id}")
-    @Operation(summary = "Atualizar compra", description = "Atualiza uma compra e recalcula a folha")
+    // --- ENDPOINTS DE COMPRA ---
+
+    // --- 2. NOVO ENDPOINT (ADICIONAR COMPRA) ---
+    @PostMapping("/folhas/{folhaId}/compras")
+    @Operation(summary = "Adicionar nova compra", description = "Adiciona um novo registro de compra a uma folha existente")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Compra atualizada com sucesso",
+            @ApiResponse(responseCode = "201", description = "Compra registrada com sucesso",
                     content = @Content(schema = @Schema(implementation = LmcCompra.class))),
             @ApiResponse(responseCode = "400", description = "Dados de compra inválidos"),
-            @ApiResponse(responseCode = "404", description = "Compra não encontrada"),
-            @ApiResponse(responseCode = "500", description = "Erro interno ao atualizar compra")
+            @ApiResponse(responseCode = "404", description = "Folha não encontrada"),
+            @ApiResponse(responseCode = "500", description = "Erro interno ao adicionar compra")
     })
+    public ResponseEntity<LmcCompra> adicionarCompra(
+            @Parameter(description = "Identificador da folha")
+            @PathVariable Long folhaId,
+            @Valid @RequestBody LmcFolhaRequestDTO.CompraDTO compraDTO) {
+
+        LmcCompra compraSalva = lmcService.adicionarCompra(folhaId, compraDTO);
+        return new ResponseEntity<>(compraSalva, HttpStatus.CREATED);
+    }
+    // --- FIM DA MUDANÇA ---
+
+    @PutMapping("/compras/{id}")
+    @Operation(summary = "Atualizar compra", description = "Atualiza uma compra e recalcula a folha")
+    // ... (ApiResponses)
     public ResponseEntity<LmcCompra> atualizarCompra(
             @Parameter(description = "Identificador da compra")
             @PathVariable Long id,
@@ -215,11 +195,7 @@ public class LmcController {
 
     @DeleteMapping("/compras/{id}")
     @Operation(summary = "Deletar compra", description = "Deleta uma compra e recalcula a folha")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Compra removida com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Compra não encontrada"),
-            @ApiResponse(responseCode = "500", description = "Erro interno ao remover compra")
-    })
+    // ... (ApiResponses)
     public ResponseEntity<Void> deletarCompra(
             @Parameter(description = "Identificador da compra")
             @PathVariable Long id) {
@@ -227,15 +203,31 @@ public class LmcController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/vendas/{id}")
-    @Operation(summary = "Atualizar venda de bico", description = "Atualiza uma venda de bico e recalcula a folha")
+    // --- ENDPOINTS DE VENDA ---
+
+    // --- 3. NOVO ENDPOINT (ADICIONAR VENDA) ---
+    @PostMapping("/folhas/{folhaId}/vendas")
+    @Operation(summary = "Adicionar nova venda de bico", description = "Adiciona um novo registro de venda a uma folha existente")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Venda de bico atualizada com sucesso",
+            @ApiResponse(responseCode = "201", description = "Venda registrada com sucesso",
                     content = @Content(schema = @Schema(implementation = LmcVendaBico.class))),
             @ApiResponse(responseCode = "400", description = "Dados de venda inválidos"),
-            @ApiResponse(responseCode = "404", description = "Venda não encontrada"),
-            @ApiResponse(responseCode = "500", description = "Erro interno ao atualizar venda")
+            @ApiResponse(responseCode = "404", description = "Folha não encontrada"),
+            @ApiResponse(responseCode = "500", description = "Erro interno ao adicionar venda")
     })
+    public ResponseEntity<LmcVendaBico> adicionarVenda(
+            @Parameter(description = "Identificador da folha")
+            @PathVariable Long folhaId,
+            @Valid @RequestBody LmcFolhaRequestDTO.VendaBicoDTO vendaDTO) {
+
+        LmcVendaBico vendaSalva = lmcService.adicionarVenda(folhaId, vendaDTO);
+        return new ResponseEntity<>(vendaSalva, HttpStatus.CREATED);
+    }
+    // --- FIM DA MUDANÇA ---
+
+    @PutMapping("/vendas/{id}")
+    @Operation(summary = "Atualizar venda de bico", description = "Atualiza uma venda de bico e recalcula a folha")
+    // ... (ApiResponses)
     public ResponseEntity<LmcVendaBico> atualizarVenda(
             @Parameter(description = "Identificador da venda")
             @PathVariable Long id,
@@ -247,15 +239,32 @@ public class LmcController {
 
     @DeleteMapping("/vendas/{id}")
     @Operation(summary = "Deletar venda de bico", description = "Deleta uma venda de bico e recalcula a folha")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Venda removida com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Venda não encontrada"),
-            @ApiResponse(responseCode = "500", description = "Erro interno ao remover venda")
-    })
+    // ... (ApiResponses)
     public ResponseEntity<Void> deletarVenda(
             @Parameter(description = "Identificador da venda")
             @PathVariable Long id) {
         lmcService.deletarVenda(id);
         return ResponseEntity.noContent().build();
     }
+
+    // --- 4. NOVO ENDPOINT (ATUALIZAR OBSERVAÇÕES) ---
+    @PutMapping("/folha/{folhaId}/observacoes")
+    @Operation(summary = "Atualizar observações", description = "Atualiza o campo de observações de uma folha LMC")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Observações atualizadas com sucesso",
+                    content = @Content(schema = @Schema(implementation = LmcFolha.class))),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "404", description = "Folha não encontrada"),
+            @ApiResponse(responseCode = "500", description = "Erro interno")
+    })
+    public ResponseEntity<LmcFolha> atualizarObservacoes(
+            @Parameter(description = "Identificador da folha")
+            @PathVariable Long folhaId,
+            @RequestBody Map<String, String> requestBody) { // Recebe um JSON simples: {"observacoes": "..."}
+
+        String observacoes = requestBody.get("observacoes");
+        LmcFolha folhaAtualizada = lmcService.atualizarObservacoes(folhaId, observacoes);
+        return ResponseEntity.ok(folhaAtualizada);
+    }
+    // --- FIM DA MUDANÇA ---
 }
