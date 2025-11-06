@@ -8,4 +8,6 @@ import java.util.Set;
 public interface LmcVendaBicoRepository extends JpaRepository<LmcVendaBico, Long> {
 
     Set<LmcVendaBico> findByLmcFolhaId(Long folhaId);
+
+    boolean existsByBicoId(Long bicoId);
 }
