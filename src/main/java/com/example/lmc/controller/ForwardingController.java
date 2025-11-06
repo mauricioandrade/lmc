@@ -8,26 +8,41 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class ForwardingController {
 
+    private static final String ERROR_STATUS_ATTRIBUTE = "jakarta.servlet.error.status_code";
+    private static final String INDEX_FORWARD = "forward:/";
+    private static final String INTERNAL_ERROR_VIEW = "error-500";
+    private static final String DEFAULT_ERROR_VIEW = "error";
+
     @RequestMapping("/error")
     public String handleError(HttpServletRequest request) {
-        Object status = request.getAttribute("jakarta.servlet.error.status_code");
-
-        if (status != null) {
-            Integer statusCode = Integer.valueOf(status.toString());
-
-            // Se for um 404 (Not Found), encaminha para o index.html
-            if (statusCode == HttpStatus.NOT_FOUND.value()) {
-                // Encaminha para a raiz, que serve o index.html
-                return "forward:/";
-            }
-            // Se for outro erro (ex: 500), deixa o Spring mostrar a página de erro
-            else if (statusCode == HttpStatus.INTERNAL_SERVER_ERROR.value()) {
-                return "error-500"; // (Você pode criar uma página error-500.html se quiser)
-            }
+        Integer statusCode = extrairStatus(request);
+        if (statusCode == null) {
+            return DEFAULT_ERROR_VIEW;
         }
 
-        // Página de erro padrão
-        return "error";
+        HttpStatus status = HttpStatus.resolve(statusCode);
+        if (status == HttpStatus.NOT_FOUND) {
+            return INDEX_FORWARD;
+        }
+        if (status == HttpStatus.INTERNAL_SERVER_ERROR) {
+            return INTERNAL_ERROR_VIEW;
+        }
+        return DEFAULT_ERROR_VIEW;
+    }
+
+    private Integer extrairStatus(HttpServletRequest request) {
+        Object status = request.getAttribute(ERROR_STATUS_ATTRIBUTE);
+        if (status == null) {
+            return null;
+        }
+        if (status instanceof Integer integerStatus) {
+            return integerStatus;
+        }
+        try {
+            return Integer.valueOf(status.toString());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 }
 

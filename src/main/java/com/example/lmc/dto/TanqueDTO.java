@@ -14,8 +14,6 @@ public class TanqueDTO {
     private Long id;
     private String numero;
     private BigDecimal capacidadeNominal;
-
-
     private Long produtoId;
     private String produtoNome;
 
@@ -27,8 +25,5 @@ public class TanqueDTO {
             this.produtoId = tanque.getProduto().getId();
             this.produtoNome = tanque.getProduto().getNome();
         }
-    }
-
-    public TanqueDTO(Long id, String numero, BigDecimal capacidadeNominal) {
     }
 }
