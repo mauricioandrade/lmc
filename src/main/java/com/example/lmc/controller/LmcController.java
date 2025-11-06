@@ -28,7 +28,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.Map; // <-- 1. ADICIONE ESTE IMPORT
+import java.util.Map; // <-- 1. VERIFIQUE SE ESTE IMPORT ESTÁ AQUI
 import java.util.Set;
 
 @RestController
@@ -159,9 +159,7 @@ public class LmcController {
         return ResponseEntity.noContent().build();
     }
 
-    // --- ENDPOINTS DE COMPRA ---
 
-    // --- 2. NOVO ENDPOINT (ADICIONAR COMPRA) ---
     @PostMapping("/folhas/{folhaId}/compras")
     @Operation(summary = "Adicionar nova compra", description = "Adiciona um novo registro de compra a uma folha existente")
     @ApiResponses(value = {

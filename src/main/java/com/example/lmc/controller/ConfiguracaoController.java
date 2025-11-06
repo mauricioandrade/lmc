@@ -1,23 +1,23 @@
 package com.example.lmc.controller;
 
 import com.example.lmc.dto.BicoDTO;
+import com.example.lmc.dto.EmpresaDTO;
 import com.example.lmc.dto.ProdutoDTO;
 import com.example.lmc.dto.TanqueDTO;
 import com.example.lmc.entity.Bico;
 import com.example.lmc.entity.Produto;
 import com.example.lmc.entity.Tanque;
 import com.example.lmc.repository.BicoRepository;
-import com.example.lmc.repository.ProdutoRepository;
 import com.example.lmc.repository.TanqueRepository;
+import com.example.lmc.service.BicoService;
+import com.example.lmc.service.EmpresaService;
+import com.example.lmc.service.ProdutoService;
+import com.example.lmc.service.TanqueService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,73 +26,188 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/config")
-@CrossOrigin(origins = "http://localhost:5173")
-@Tag(name = "Configurações", description = "Endpoints para consulta de produtos, tanques e bicos")
+@CrossOrigin(
+        origins = "http://localhost:5173",
+        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS}
+)
+@Tag(name = "Configurações", description = "Endpoints para consulta e gerenciamento de produtos, tanques e bicos")
 public class ConfiguracaoController {
 
-    @Autowired
-    private ProdutoRepository produtoRepository;
+
+    private final ProdutoService produtoService;
+    private final TanqueService tanqueService;
+    private final BicoService bicoService;
+    private final TanqueRepository tanqueRepository;
+    private final BicoRepository bicoRepository;
+    private final EmpresaService empresaService;
 
     @Autowired
-    private TanqueRepository tanqueRepository;
+    public ConfiguracaoController(ProdutoService produtoService,
+                                  TanqueRepository tanqueRepository,
+                                  BicoRepository bicoRepository,
+                                  TanqueService tanqueService,
+                                  EmpresaService empresaService,
+                                  BicoService bicoService) {
+        this.produtoService = produtoService;
+        this.tanqueRepository = tanqueRepository;
+        this.bicoRepository = bicoRepository;
+        this.tanqueService = tanqueService;
+        this.empresaService = empresaService;
+        this.bicoService = bicoService;
 
-    @Autowired
-    private BicoRepository bicoRepository;
+    }
 
     @GetMapping("/produtos")
-    @Operation(summary = "Listar produtos", description = "Retorna todos os produtos cadastrados para configuração da LMC")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de produtos recuperada com sucesso",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProdutoDTO.class)))),
-            @ApiResponse(responseCode = "500", description = "Erro interno ao listar produtos")
-    })
+    @Operation(summary = "Listar produtos")
     public ResponseEntity<List<ProdutoDTO>> getProdutos() {
-        List<Produto> produtos = produtoRepository.findAll();
-
+        List<Produto> produtos = produtoService.listarTodos();
         List<ProdutoDTO> produtosDTO = produtos.stream()
                 .map(p -> new ProdutoDTO(p.getId(), p.getNome()))
                 .collect(Collectors.toList());
-
         return ResponseEntity.ok(produtosDTO);
     }
 
+    @GetMapping("/produtos/{id}")
+    @Operation(summary = "Buscar um produto por ID")
+    public ResponseEntity<ProdutoDTO> getProdutoById(@PathVariable Long id) {
+        Produto produto = produtoService.buscarPorId(id);
+        ProdutoDTO dto = new ProdutoDTO(produto.getId(), produto.getNome());
+        return ResponseEntity.ok(dto);
+    }
+
+    @PostMapping("/produtos")
+    @Operation(summary = "Criar um novo produto")
+    public ResponseEntity<ProdutoDTO> criarProduto(@RequestBody ProdutoDTO produtoDTO) {
+        Produto produtoParaSalvar = new Produto();
+        produtoParaSalvar.setNome(produtoDTO.getNome());
+        Produto produtoSalvo = produtoService.salvarProduto(produtoParaSalvar);
+        ProdutoDTO dtoRetorno = new ProdutoDTO(produtoSalvo.getId(), produtoSalvo.getNome());
+        return new ResponseEntity<>(dtoRetorno, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/produtos/{id}")
+    @Operation(summary = "Atualizar um produto existente")
+    public ResponseEntity<ProdutoDTO> atualizarProduto(@PathVariable Long id, @RequestBody ProdutoDTO produtoDTO) {
+        Produto produtoParaAtualizar = new Produto();
+        produtoParaAtualizar.setNome(produtoDTO.getNome());
+        Produto produtoAtualizado = produtoService.atualizarProduto(id, produtoParaAtualizar);
+        ProdutoDTO dtoRetorno = new ProdutoDTO(produtoAtualizado.getId(), produtoAtualizado.getNome());
+        return ResponseEntity.ok(dtoRetorno);
+    }
+
+    @DeleteMapping("/produtos/{id}")
+    @Operation(summary = "Deletar um produto")
+    public ResponseEntity<Void> deletarProduto(@PathVariable Long id) {
+        produtoService.deletarProduto(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
     @GetMapping("/tanques")
-    @Operation(summary = "Listar tanques por produto", description = "Retorna os tanques associados ao produto informado")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de tanques recuperada com sucesso",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = TanqueDTO.class)))),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
-            @ApiResponse(responseCode = "404", description = "Nenhum tanque encontrado para o produto"),
-            @ApiResponse(responseCode = "500", description = "Erro interno ao listar tanques")
-    })
+    @Operation(summary = "Listar tanques por produto (para formulário LMC)")
     public ResponseEntity<List<TanqueDTO>> getTanquesPorProduto(
             @Parameter(description = "Identificador do produto") @RequestParam Long produtoId) {
-        List<Tanque> tanques = tanqueRepository.findByProdutoId(produtoId);
 
+        List<Tanque> tanques = tanqueRepository.findByProdutoIdEager(produtoId);
         List<TanqueDTO> tanquesDTO = tanques.stream()
-                .map(t -> new TanqueDTO(t.getId(), t.getNumero(), t.getCapacidadeNominal()))
+                .map(TanqueDTO::new)
                 .collect(Collectors.toList());
-
         return ResponseEntity.ok(tanquesDTO);
     }
 
+
+    @GetMapping("/tanques/all")
+    @Operation(summary = "Listar TODOS os tanques (para Admin)")
+    public ResponseEntity<List<TanqueDTO>> getTodosTanques() {
+        return ResponseEntity.ok(tanqueService.listarTodos());
+    }
+
+    @PostMapping("/tanques")
+    @Operation(summary = "Criar um novo tanque")
+    public ResponseEntity<TanqueDTO> criarTanque(@RequestBody TanqueDTO tanqueDTO) {
+        TanqueDTO tanqueSalvo = tanqueService.salvarTanque(tanqueDTO);
+        return new ResponseEntity<>(tanqueSalvo, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/tanques/{id}")
+    @Operation(summary = "Atualizar um tanque existente")
+    public ResponseEntity<TanqueDTO> atualizarTanque(@PathVariable Long id, @RequestBody TanqueDTO tanqueDTO) {
+        TanqueDTO tanqueAtualizado = tanqueService.atualizarTanque(id, tanqueDTO);
+        return ResponseEntity.ok(tanqueAtualizado);
+    }
+
+    @DeleteMapping("/tanques/{id}")
+    @Operation(summary = "Deletar um tanque")
+    public ResponseEntity<Void> deletarTanque(@PathVariable Long id) {
+        tanqueService.deletarTanque(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/empresas")
+    @Operation(summary = "Listar TODAS as empresas (para Admin)")
+    public ResponseEntity<List<EmpresaDTO>> getTodasEmpresas() {
+        return ResponseEntity.ok(empresaService.listarTodas());
+    }
+
+    @PostMapping("/empresas")
+    @Operation(summary = "Criar uma nova empresa")
+    public ResponseEntity<EmpresaDTO> criarEmpresa(@RequestBody EmpresaDTO empresaDTO) {
+        EmpresaDTO empresaSalva = empresaService.salvarEmpresa(empresaDTO);
+        return new ResponseEntity<>(empresaSalva, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/empresas/{id}")
+    @Operation(summary = "Atualizar uma empresa existente")
+    public ResponseEntity<EmpresaDTO> atualizarEmpresa(@PathVariable Long id, @RequestBody EmpresaDTO empresaDTO) {
+        EmpresaDTO empresaAtualizada = empresaService.atualizarEmpresa(id, empresaDTO);
+        return ResponseEntity.ok(empresaAtualizada);
+    }
+
+    @DeleteMapping("/empresas/{id}")
+    @Operation(summary = "Deletar uma empresa")
+    public ResponseEntity<Void> deletarEmpresa(@PathVariable Long id) {
+        empresaService.deletarEmpresa(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/bicos")
-    @Operation(summary = "Listar bicos por tanque", description = "Retorna os bicos associados ao tanque informado")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de bicos recuperada com sucesso",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = BicoDTO.class)))),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida"),
-            @ApiResponse(responseCode = "404", description = "Nenhum bico encontrado para o tanque"),
-            @ApiResponse(responseCode = "500", description = "Erro interno ao listar bicos")
-    })
+    @Operation(summary = "Listar bicos por tanque (para formulário LMC)")
     public ResponseEntity<List<BicoDTO>> getBicosPorTanque(
             @Parameter(description = "Identificador do tanque") @RequestParam Long tanqueId) {
         List<Bico> bicos = bicoRepository.findByTanqueId(tanqueId);
 
         List<BicoDTO> bicosDTO = bicos.stream()
-                .map(b -> new BicoDTO(b.getId(), b.getNumero()))
+                .filter(b -> b.getTanque() != null)
+                .map(BicoDTO::new)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(bicosDTO);
+    }
+
+    @GetMapping("/bicos/all")
+    @Operation(summary = "Listar TODOS os bicos (para Admin)")
+    public ResponseEntity<List<BicoDTO>> getTodosBicos() {
+        return ResponseEntity.ok(bicoService.listarTodos());
+    }
+
+    @PostMapping("/bicos")
+    @Operation(summary = "Criar um novo bico")
+    public ResponseEntity<BicoDTO> criarBico(@RequestBody BicoDTO bicoDTO) {
+        BicoDTO bicoSalvo = bicoService.salvarBico(bicoDTO);
+        return new ResponseEntity<>(bicoSalvo, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/bicos/{id}")
+    @Operation(summary = "Atualizar um bico existente")
+    public ResponseEntity<BicoDTO> atualizarBico(@PathVariable Long id, @RequestBody BicoDTO bicoDTO) {
+        BicoDTO bicoAtualizado = bicoService.atualizarBico(id, bicoDTO);
+        return ResponseEntity.ok(bicoAtualizado);
+    }
+
+    @DeleteMapping("/bicos/{id}")
+    @Operation(summary = "Deletar um bico")
+    public ResponseEntity<Void> deletarBico(@PathVariable Long id) {
+        bicoService.deletarBico(id);
+        return ResponseEntity.noContent().build();
     }
 }
