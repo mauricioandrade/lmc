@@ -1,8 +1,21 @@
 package com.example.lmc.service;
 
 import com.example.lmc.dto.LmcFolhaRequestDTO;
-import com.example.lmc.entity.*;
-import com.example.lmc.repository.*;
+import com.example.lmc.entity.Bico;
+import com.example.lmc.entity.LmcCompra;
+import com.example.lmc.entity.LmcFolha;
+import com.example.lmc.entity.LmcMedicaoTanque;
+import com.example.lmc.entity.LmcVendaBico;
+import com.example.lmc.entity.Produto;
+import com.example.lmc.entity.Tanque;
+import com.example.lmc.exception.BusinessException;
+import com.example.lmc.repository.BicoRepository;
+import com.example.lmc.repository.LmcCompraRepository;
+import com.example.lmc.repository.LmcFolhaRepository;
+import com.example.lmc.repository.LmcMedicaoTanqueRepository;
+import com.example.lmc.repository.LmcVendaBicoRepository;
+import com.example.lmc.repository.ProdutoRepository;
+import com.example.lmc.repository.TanqueRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,13 +25,14 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
 @Transactional
 public class LmcService {
-
-    // --- Repositórios Injetados (Correto) ---
     private final LmcFolhaRepository lmcFolhaRepository;
     private final ProdutoRepository produtoRepository;
     private final TanqueRepository tanqueRepository;
@@ -44,85 +58,31 @@ public class LmcService {
         this.vendaBicoRepository = vendaBicoRepository;
     }
 
-    // --- Seu método de Criar (Correto) ---
     @Transactional
     public LmcFolha salvarFolhaDiaria(LmcFolhaRequestDTO request) {
-        // ... (Seu código completo e correto para salvar a folha) ...
-        lmcFolhaRepository.findByDataAndProdutoId(request.getData(), request.getProdutoId())
-                .ifPresent(f -> {
-                    throw new RuntimeException("Já existe uma folha LMC para este produto e data.");
-                });
-        Produto produto = produtoRepository.findById(request.getProdutoId())
-                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
-        LmcFolha folha = new LmcFolha();
-        folha.setData(request.getData());
-        folha.setProduto(produto);
-        folha.setObservacoes(request.getObservacoes());
-        folha.setMedicoesTanque(new HashSet<>());
-        folha.setCompras(new HashSet<>());
-        folha.setVendasBico(new HashSet<>());
-        for (LmcFolhaRequestDTO.MedicaoTanqueDTO medicaoDTO : request.getMedicoes()) {
-            Tanque tanque = tanqueRepository.findById(medicaoDTO.getTanqueId())
-                    .orElseThrow(() -> new EntityNotFoundException("Tanque não encontrado"));
-            LmcMedicaoTanque medicao = new LmcMedicaoTanque();
-            medicao.setLmcFolha(folha);
-            medicao.setTanque(tanque);
-            medicao.setEstoqueAbertura(medicaoDTO.getEstoqueAbertura());
-            medicao.setEstoqueFechamentoFisico(medicaoDTO.getEstoqueFechamentoFisico());
-            folha.getMedicoesTanque().add(medicao);
-        }
-        if (request.getCompras() != null) {
-            for (LmcFolhaRequestDTO.CompraDTO compraDTO : request.getCompras()) {
-                Tanque tanque = tanqueRepository.findById(compraDTO.getTanqueDescargaId())
-                        .orElseThrow(() -> new EntityNotFoundException("Tanque de descarga não encontrado"));
-                LmcCompra compra = new LmcCompra();
-                compra.setLmcFolha(folha);
-                compra.setTanqueDescarga(tanque);
-                compra.setNumeroDocumentoFiscal(compraDTO.getNumeroDocumentoFiscal());
-                compra.setVolumeRecebido(compraDTO.getVolumeRecebido());
-                folha.getCompras().add(compra);
-            }
-        }
-        for (LmcFolhaRequestDTO.VendaBicoDTO vendaDTO : request.getVendas()) {
-            Bico bico = bicoRepository.findById(vendaDTO.getBicoId())
-                    .orElseThrow(() -> new EntityNotFoundException("Bico não encontrado"));
-            BigDecimal vendasBicoCalculada = new BigDecimal(vendaDTO.getEncerranteFechamento())
-                    .subtract(new BigDecimal(vendaDTO.getEncerranteAbertura()))
-                    .subtract(vendaDTO.getAfericoes());
-            LmcVendaBico venda = new LmcVendaBico();
-            venda.setLmcFolha(folha);
-            venda.setBico(bico);
-            venda.setPrecoNaBomba(vendaDTO.getPrecoNaBomba());
-            venda.setEncerranteAbertura(vendaDTO.getEncerranteAbertura());
-            venda.setEncerranteFechamento(vendaDTO.getEncerranteFechamento());
-            venda.setAfericoes(vendaDTO.getAfericoes());
-            venda.setVendasBico(vendasBicoCalculada);
-            folha.getVendasBico().add(venda);
-        }
+        validarFolhaUnica(request.getData(), request.getProdutoId());
+        Produto produto = buscarProduto(request.getProdutoId());
+        LmcFolha folha = criarFolha(request, produto);
+        request.getMedicoes().stream()
+                .map(medicao -> criarMedicao(folha, medicao))
+                .forEach(folha.getMedicoesTanque()::add);
+        Optional.ofNullable(request.getCompras()).orElseGet(List::of).stream()
+                .map(compra -> criarCompra(folha, compra))
+                .forEach(folha.getCompras()::add);
+        request.getVendas().stream()
+                .map(venda -> criarVenda(folha, venda))
+                .forEach(folha.getVendasBico()::add);
         recalcularEValidarTotais(folha);
-        BigDecimal acumuladoAnterior = lmcFolhaRepository
-                .findTopByProdutoIdAndDataBeforeOrderByDataDesc(produto.getId(), folha.getData())
-                .map(folhaAnterior -> {
-                    if (folhaAnterior.getData().getMonth().equals(folha.getData().getMonth())) {
-                        return folhaAnterior.getValorAcumuladoMes();
-                    }
-                    return BigDecimal.ZERO;
-                })
-                .orElse(BigDecimal.ZERO);
-        folha.setValorAcumuladoMes(
-                acumuladoAnterior.add(folha.getValorVendasDia())
-        );
+        folha.setValorAcumuladoMes(calcularValorAcumuladoMes(folha));
         return lmcFolhaRepository.save(folha);
     }
 
-    // --- Seu método de Buscar (Correto) ---
     @Transactional(readOnly = true)
     public LmcFolha buscarFolhaPorDataEProduto(LocalDate data, Long produtoId) {
         return lmcFolhaRepository.findByDataAndProdutoIdEager(data, produtoId)
                 .orElseThrow(() -> new EntityNotFoundException("Nenhuma folha LMC encontrada para esta data e produto."));
     }
 
-    // --- Seus métodos de Atualizar (Corretos) ---
     @Transactional
     public LmcMedicaoTanque atualizarMedicaoTanque(Long id, LmcFolhaRequestDTO.MedicaoTanqueDTO medicaoDTO) {
         LmcMedicaoTanque medicaoExistente = medicaoTanqueRepository.findById(id)
@@ -130,9 +90,7 @@ public class LmcService {
         medicaoExistente.setEstoqueAbertura(medicaoDTO.getEstoqueAbertura());
         medicaoExistente.setEstoqueFechamentoFisico(medicaoDTO.getEstoqueFechamentoFisico());
         if (medicaoDTO.getTanqueId() != null) {
-            Tanque tanque = tanqueRepository.findById(medicaoDTO.getTanqueId())
-                    .orElseThrow(() -> new RuntimeException("Tanque não encontrado"));
-            medicaoExistente.setTanque(tanque);
+            medicaoExistente.setTanque(buscarTanque(medicaoDTO.getTanqueId()));
         }
         LmcMedicaoTanque medicaoSalva = medicaoTanqueRepository.save(medicaoExistente);
         recalcularEValidarTotais(medicaoSalva.getLmcFolha());
@@ -146,9 +104,7 @@ public class LmcService {
         compraExistente.setNumeroDocumentoFiscal(compraDTO.getNumeroDocumentoFiscal());
         compraExistente.setVolumeRecebido(compraDTO.getVolumeRecebido());
         if (compraDTO.getTanqueDescargaId() != null) {
-            Tanque tanque = tanqueRepository.findById(compraDTO.getTanqueDescargaId())
-                    .orElseThrow(() -> new RuntimeException("Tanque de descarga não encontrado"));
-            compraExistente.setTanqueDescarga(tanque);
+            compraExistente.setTanqueDescarga(buscarTanque(compraDTO.getTanqueDescargaId()));
         }
         LmcCompra compraSalva = compraRepository.save(compraExistente);
         recalcularEValidarTotais(compraSalva.getLmcFolha());
@@ -163,119 +119,54 @@ public class LmcService {
         vendaExistente.setEncerranteFechamento(vendaDTO.getEncerranteFechamento());
         vendaExistente.setAfericoes(vendaDTO.getAfericoes());
         vendaExistente.setPrecoNaBomba(vendaDTO.getPrecoNaBomba());
-        BigDecimal vendasBicoCalculada = new BigDecimal(vendaDTO.getEncerranteFechamento())
-                .subtract(new BigDecimal(vendaDTO.getEncerranteAbertura()))
-                .subtract(vendaDTO.getAfericoes());
-        vendaExistente.setVendasBico(vendasBicoCalculada);
+        vendaExistente.setVendasBico(calcularVolumeVendido(vendaDTO.getEncerranteFechamento(), vendaDTO.getEncerranteAbertura(), vendaDTO.getAfericoes()));
         if (vendaDTO.getBicoId() != null) {
-            Bico bico = bicoRepository.findById(vendaDTO.getBicoId())
-                    .orElseThrow(() -> new RuntimeException("Bico não encontrado"));
-            vendaExistente.setBico(bico);
+            vendaExistente.setBico(buscarBico(vendaDTO.getBicoId()));
         }
         LmcVendaBico vendaSalva = vendaBicoRepository.save(vendaExistente);
         recalcularEValidarTotais(vendaSalva.getLmcFolha());
         return vendaSalva;
     }
 
-    // --- Seus métodos de Adicionar/Deletar (Corretos) ---
     @Transactional
     public LmcMedicaoTanque adicionarMedicaoTanque(Long folhaId, LmcFolhaRequestDTO.MedicaoTanqueDTO medicaoDTO) {
         LmcFolha folha = lmcFolhaRepository.findById(folhaId)
                 .orElseThrow(() -> new EntityNotFoundException("Folha LMC não encontrada: " + folhaId));
-        Tanque tanque = tanqueRepository.findById(medicaoDTO.getTanqueId())
-                .orElseThrow(() -> new EntityNotFoundException("Tanque não encontrado"));
-        LmcMedicaoTanque novaMedicao = new LmcMedicaoTanque();
-        novaMedicao.setLmcFolha(folha);
-        novaMedicao.setTanque(tanque);
-        novaMedicao.setEstoqueAbertura(medicaoDTO.getEstoqueAbertura());
-        novaMedicao.setEstoqueFechamentoFisico(medicaoDTO.getEstoqueFechamentoFisico());
+        LmcMedicaoTanque novaMedicao = criarMedicao(folha, medicaoDTO);
         LmcMedicaoTanque medicaoSalva = medicaoTanqueRepository.save(novaMedicao);
         folha.getMedicoesTanque().add(medicaoSalva);
         recalcularEValidarTotais(folha);
         return medicaoSalva;
     }
 
-    // --- NOVO MÉTODO (ADICIONAR COMPRA) ---
     @Transactional
     public LmcCompra adicionarCompra(Long folhaId, LmcFolhaRequestDTO.CompraDTO compraDTO) {
         LmcFolha folha = lmcFolhaRepository.findById(folhaId)
                 .orElseThrow(() -> new EntityNotFoundException("Folha LMC não encontrada: " + folhaId));
-
-        Tanque tanque = tanqueRepository.findById(compraDTO.getTanqueDescargaId())
-                .orElseThrow(() -> new EntityNotFoundException("Tanque não encontrado"));
-
-        LmcCompra novaCompra = new LmcCompra();
-        novaCompra.setLmcFolha(folha);
-        novaCompra.setTanqueDescarga(tanque);
-        novaCompra.setNumeroDocumentoFiscal(compraDTO.getNumeroDocumentoFiscal());
-        novaCompra.setVolumeRecebido(compraDTO.getVolumeRecebido());
-
+        LmcCompra novaCompra = criarCompra(folha, compraDTO);
         LmcCompra compraSalva = compraRepository.save(novaCompra);
-
         folha.getCompras().add(compraSalva);
-
         recalcularEValidarTotais(folha);
-
         return compraSalva;
     }
 
-    // --- NOVO MÉTODO (ADICIONAR VENDA) ---
     @Transactional
     public LmcVendaBico adicionarVenda(Long folhaId, LmcFolhaRequestDTO.VendaBicoDTO vendaDTO) {
         LmcFolha folha = lmcFolhaRepository.findById(folhaId)
                 .orElseThrow(() -> new EntityNotFoundException("Folha LMC não encontrada: " + folhaId));
-
-        Bico bico = bicoRepository.findById(vendaDTO.getBicoId())
-                .orElseThrow(() -> new EntityNotFoundException("Bico não encontrado"));
-
-        BigDecimal vendasBicoCalculada = new BigDecimal(vendaDTO.getEncerranteFechamento())
-                .subtract(new BigDecimal(vendaDTO.getEncerranteAbertura()))
-                .subtract(vendaDTO.getAfericoes());
-
-        LmcVendaBico novaVenda = new LmcVendaBico();
-        novaVenda.setLmcFolha(folha);
-        novaVenda.setBico(bico);
-        novaVenda.setPrecoNaBomba(vendaDTO.getPrecoNaBomba());
-        novaVenda.setEncerranteAbertura(vendaDTO.getEncerranteAbertura());
-        novaVenda.setEncerranteFechamento(vendaDTO.getEncerranteFechamento());
-        novaVenda.setAfericoes(vendaDTO.getAfericoes());
-        novaVenda.setVendasBico(vendasBicoCalculada);
-
+        LmcVendaBico novaVenda = criarVenda(folha, vendaDTO);
         LmcVendaBico vendaSalva = vendaBicoRepository.save(novaVenda);
-
         folha.getVendasBico().add(vendaSalva);
-
         recalcularEValidarTotais(folha);
-
         return vendaSalva;
     }
 
-    // --- NOVO MÉTODO (ATUALIZAR OBSERVAÇÕES) ---
     @Transactional
     public LmcFolha atualizarObservacoes(Long folhaId, String observacoes) {
         LmcFolha folha = lmcFolhaRepository.findById(folhaId)
                 .orElseThrow(() -> new EntityNotFoundException("Folha LMC não encontrada: " + folhaId));
-
         folha.setObservacoes(observacoes);
-
-        // Re-valida a regra de 0.6%
-        BigDecimal volumeDisponivel = folha.getVolumeDisponivel();
-        BigDecimal perdasGanhos = folha.getPerdasGanhos();
-
-        if (volumeDisponivel != null && volumeDisponivel.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal variacaoPercentual = perdasGanhos.abs()
-                    .divide(volumeDisponivel, 6, RoundingMode.HALF_UP)
-                    .multiply(CEM);
-
-            if (variacaoPercentual.compareTo(VARIACAO_PERMITIDA_PERCENTUAL) > 0) {
-                if (observacoes == null || observacoes.trim().isEmpty()) {
-                    throw new RuntimeException("Variação de estoque superior a 0.6% (" +
-                            variacaoPercentual.setScale(3, RoundingMode.HALF_UP) +
-                            "%). O campo Observações (13.5) é obrigatório.");
-                }
-            }
-        }
-
+        validarObservacoes(folha.getVolumeDisponivel(), folha.getPerdasGanhos(), observacoes, true);
         return lmcFolhaRepository.save(folha);
     }
 
@@ -315,62 +206,137 @@ public class LmcService {
         recalcularEValidarTotais(folha);
     }
 
-    // --- Seu método de Recálculo (Correto) ---
     private void recalcularEValidarTotais(LmcFolha folha) {
-        // ... (Seu código completo e correto para recalcular totais) ...
-        BigDecimal totalEstoqueAbertura = BigDecimal.ZERO;
-        BigDecimal totalEstoqueFechamento = BigDecimal.ZERO;
-        Set<LmcMedicaoTanque> medicoes = medicaoTanqueRepository.findByLmcFolhaId(folha.getId());
-        for (LmcMedicaoTanque medicao : medicoes) {
-            totalEstoqueAbertura = totalEstoqueAbertura.add(medicao.getEstoqueAbertura());
-            totalEstoqueFechamento = totalEstoqueFechamento.add(medicao.getEstoqueFechamentoFisico());
-        }
+        Set<LmcMedicaoTanque> medicoes = Objects.requireNonNullElse(folha.getMedicoesTanque(), new HashSet<>());
+        BigDecimal totalEstoqueAbertura = medicoes.stream()
+                .map(LmcMedicaoTanque::getEstoqueAbertura)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalEstoqueFechamento = medicoes.stream()
+                .map(LmcMedicaoTanque::getEstoqueFechamentoFisico)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         folha.setEstoqueFechamento(totalEstoqueFechamento);
-        BigDecimal totalRecebido = BigDecimal.ZERO;
-        Set<LmcCompra> compras = compraRepository.findByLmcFolhaId(folha.getId());
-        if (compras != null) {
-            for (LmcCompra compra : compras) {
-                totalRecebido = totalRecebido.add(compra.getVolumeRecebido());
-            }
-        }
+
+        Set<LmcCompra> compras = Objects.requireNonNullElse(folha.getCompras(), new HashSet<>());
+        BigDecimal totalRecebido = compras.stream()
+                .map(LmcCompra::getVolumeRecebido)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         folha.setTotalRecebido(totalRecebido);
+
         BigDecimal volumeDisponivel = totalEstoqueAbertura.add(totalRecebido);
         folha.setVolumeDisponivel(volumeDisponivel);
+
+        Set<LmcVendaBico> vendas = Objects.requireNonNullElse(folha.getVendasBico(), new HashSet<>());
         BigDecimal totalVendasDia = BigDecimal.ZERO;
         BigDecimal valorVendasDia = BigDecimal.ZERO;
-        Set<LmcVendaBico> vendas = vendaBicoRepository.findByLmcFolhaId(folha.getId());
-        if (vendas != null) {
-            for (LmcVendaBico venda : vendas) {
-                BigDecimal vendasBicoCalculada = new BigDecimal(venda.getEncerranteFechamento())
-                        .subtract(new BigDecimal(venda.getEncerranteAbertura()))
-                        .subtract(venda.getAfericoes());
-                venda.setVendasBico(vendasBicoCalculada);
-                totalVendasDia = totalVendasDia.add(vendasBicoCalculada);
-                valorVendasDia = valorVendasDia.add(
-                        vendasBicoCalculada.multiply(venda.getPrecoNaBomba())
-                );
-            }
+        for (LmcVendaBico venda : vendas) {
+            BigDecimal vendasCalculadas = calcularVolumeVendido(venda.getEncerranteFechamento(), venda.getEncerranteAbertura(), venda.getAfericoes());
+            venda.setVendasBico(vendasCalculadas);
+            totalVendasDia = totalVendasDia.add(vendasCalculadas);
+            valorVendasDia = valorVendasDia.add(vendasCalculadas.multiply(venda.getPrecoNaBomba()));
         }
         folha.setTotalVendasDia(totalVendasDia);
         folha.setValorVendasDia(valorVendasDia.setScale(2, RoundingMode.HALF_UP));
+
         BigDecimal estoqueEscritural = volumeDisponivel.subtract(totalVendasDia);
         folha.setEstoqueEscritural(estoqueEscritural);
+
         BigDecimal perdasGanhos = totalEstoqueFechamento.subtract(estoqueEscritural);
         folha.setPerdasGanhos(perdasGanhos);
-        if (volumeDisponivel.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal variacaoPercentual = perdasGanhos.abs()
-                    .divide(volumeDisponivel, 6, RoundingMode.HALF_UP)
-                    .multiply(CEM);
-            if (variacaoPercentual.compareTo(VARIACAO_PERMITIDA_PERCENTUAL) > 0) {
-                if (folha.getObservacoes() == null || folha.getObservacoes().trim().isEmpty()) {
-                    if (folha.getId() == null) {
-                        throw new RuntimeException("Variação de estoque superior a 0.6% (" +
-                                variacaoPercentual.setScale(3, RoundingMode.HALF_UP) +
-                                "%). O campo Observações (13.5) é obrigatório.");
-                    }
-                }
+
+        boolean novaFolha = folha.getId() == null;
+        validarObservacoes(volumeDisponivel, perdasGanhos, folha.getObservacoes(), novaFolha);
+    }
+
+    private void validarFolhaUnica(LocalDate data, Long produtoId) {
+        lmcFolhaRepository.findByDataAndProdutoId(data, produtoId)
+                .ifPresent(folha -> {
+                    throw new BusinessException("Já existe uma folha LMC para este produto e data.");
+                });
+    }
+
+    private Produto buscarProduto(Long produtoId) {
+        return produtoRepository.findById(produtoId)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
+    }
+
+    private Tanque buscarTanque(Long tanqueId) {
+        return tanqueRepository.findById(tanqueId)
+                .orElseThrow(() -> new EntityNotFoundException("Tanque não encontrado"));
+    }
+
+    private Bico buscarBico(Long bicoId) {
+        return bicoRepository.findById(bicoId)
+                .orElseThrow(() -> new EntityNotFoundException("Bico não encontrado"));
+    }
+
+    private LmcFolha criarFolha(LmcFolhaRequestDTO request, Produto produto) {
+        LmcFolha folha = new LmcFolha();
+        folha.setData(request.getData());
+        folha.setProduto(produto);
+        folha.setObservacoes(request.getObservacoes());
+        folha.setMedicoesTanque(new HashSet<>());
+        folha.setCompras(new HashSet<>());
+        folha.setVendasBico(new HashSet<>());
+        return folha;
+    }
+
+    private LmcMedicaoTanque criarMedicao(LmcFolha folha, LmcFolhaRequestDTO.MedicaoTanqueDTO medicaoDTO) {
+        LmcMedicaoTanque medicao = new LmcMedicaoTanque();
+        medicao.setLmcFolha(folha);
+        medicao.setTanque(buscarTanque(medicaoDTO.getTanqueId()));
+        medicao.setEstoqueAbertura(medicaoDTO.getEstoqueAbertura());
+        medicao.setEstoqueFechamentoFisico(medicaoDTO.getEstoqueFechamentoFisico());
+        return medicao;
+    }
+
+    private LmcCompra criarCompra(LmcFolha folha, LmcFolhaRequestDTO.CompraDTO compraDTO) {
+        LmcCompra compra = new LmcCompra();
+        compra.setLmcFolha(folha);
+        compra.setTanqueDescarga(buscarTanque(compraDTO.getTanqueDescargaId()));
+        compra.setNumeroDocumentoFiscal(compraDTO.getNumeroDocumentoFiscal());
+        compra.setVolumeRecebido(compraDTO.getVolumeRecebido());
+        return compra;
+    }
+
+    private LmcVendaBico criarVenda(LmcFolha folha, LmcFolhaRequestDTO.VendaBicoDTO vendaDTO) {
+        LmcVendaBico venda = new LmcVendaBico();
+        venda.setLmcFolha(folha);
+        venda.setBico(buscarBico(vendaDTO.getBicoId()));
+        venda.setPrecoNaBomba(vendaDTO.getPrecoNaBomba());
+        venda.setEncerranteAbertura(vendaDTO.getEncerranteAbertura());
+        venda.setEncerranteFechamento(vendaDTO.getEncerranteFechamento());
+        venda.setAfericoes(vendaDTO.getAfericoes());
+        venda.setVendasBico(calcularVolumeVendido(vendaDTO.getEncerranteFechamento(), vendaDTO.getEncerranteAbertura(), vendaDTO.getAfericoes()));
+        return venda;
+    }
+
+    private BigDecimal calcularVolumeVendido(Long encerranteFechamento, Long encerranteAbertura, BigDecimal afericoes) {
+        BigDecimal fechamento = new BigDecimal(encerranteFechamento);
+        BigDecimal abertura = new BigDecimal(encerranteAbertura);
+        return fechamento.subtract(abertura).subtract(afericoes);
+    }
+
+    private BigDecimal calcularValorAcumuladoMes(LmcFolha folha) {
+        return lmcFolhaRepository.findTopByProdutoIdAndDataBeforeOrderByDataDesc(folha.getProduto().getId(), folha.getData())
+                .filter(folhaAnterior -> folhaAnterior.getData().getMonth().equals(folha.getData().getMonth()))
+                .map(LmcFolha::getValorAcumuladoMes)
+                .orElse(BigDecimal.ZERO)
+                .add(folha.getValorVendasDia());
+    }
+
+    private void validarObservacoes(BigDecimal volumeDisponivel, BigDecimal perdasGanhos, String observacoes, boolean observacaoObrigatoria) {
+        if (volumeDisponivel == null || volumeDisponivel.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        BigDecimal perdas = Optional.ofNullable(perdasGanhos).orElse(BigDecimal.ZERO);
+        BigDecimal variacaoPercentual = perdas.abs()
+                .divide(volumeDisponivel, 6, RoundingMode.HALF_UP)
+                .multiply(CEM);
+        if (variacaoPercentual.compareTo(VARIACAO_PERMITIDA_PERCENTUAL) > 0 && observacaoObrigatoria) {
+            if (observacoes == null || observacoes.trim().isEmpty()) {
+                throw new BusinessException(String.format("Variação de estoque superior a 0.6%% (%s%%). O campo Observações (13.5) é obrigatório.",
+                        variacaoPercentual.setScale(3, RoundingMode.HALF_UP)));
             }
         }
-        lmcFolhaRepository.save(folha);
     }
 }

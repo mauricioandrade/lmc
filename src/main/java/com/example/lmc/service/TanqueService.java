@@ -3,6 +3,7 @@ package com.example.lmc.service;
 import com.example.lmc.dto.TanqueDTO;
 import com.example.lmc.entity.Produto;
 import com.example.lmc.entity.Tanque;
+import com.example.lmc.exception.BusinessException;
 import com.example.lmc.repository.BicoRepository;
 import com.example.lmc.repository.ProdutoRepository;
 import com.example.lmc.repository.TanqueRepository;
@@ -20,18 +21,25 @@ public class TanqueService {
 
     private final TanqueRepository tanqueRepository;
     private final ProdutoRepository produtoRepository;
-    private final BicoRepository bicoRepository; // <-- 2. Injete o BicoRepository
+    private final BicoRepository bicoRepository;
 
     @Autowired
     public TanqueService(TanqueRepository tanqueRepository, ProdutoRepository produtoRepository, BicoRepository bicoRepository) {
         this.tanqueRepository = tanqueRepository;
         this.produtoRepository = produtoRepository;
-        this.bicoRepository = bicoRepository; // <-- 3. Adicione ao construtor
+        this.bicoRepository = bicoRepository;
     }
 
     @Transactional(readOnly = true)
     public List<TanqueDTO> listarTodos() {
         return tanqueRepository.findAllWithProduto().stream()
+                .map(TanqueDTO::new)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<TanqueDTO> listarPorProduto(Long produtoId) {
+        return tanqueRepository.findByProdutoIdEager(produtoId).stream()
                 .map(TanqueDTO::new)
                 .collect(Collectors.toList());
     }
@@ -43,59 +51,46 @@ public class TanqueService {
     }
 
     public TanqueDTO salvarTanque(TanqueDTO tanqueDTO) {
-
-        tanqueRepository.findByNumero(tanqueDTO.getNumero()).ifPresent(t -> {
-            throw new RuntimeException("Já existe um tanque com o número: " + tanqueDTO.getNumero());
-        });
-
-
-        Produto produto = produtoRepository.findById(tanqueDTO.getProdutoId())
-                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado com id: " + tanqueDTO.getProdutoId()));
-
-
+        validarNumeroUnico(tanqueDTO.getNumero(), null);
+        Produto produto = buscarProduto(tanqueDTO.getProdutoId());
         Tanque novoTanque = new Tanque();
         novoTanque.setNumero(tanqueDTO.getNumero());
         novoTanque.setCapacidadeNominal(tanqueDTO.getCapacidadeNominal());
         novoTanque.setProduto(produto);
-
         Tanque tanqueSalvo = tanqueRepository.save(novoTanque);
         return new TanqueDTO(tanqueSalvo);
     }
 
     public TanqueDTO atualizarTanque(Long id, TanqueDTO tanqueDTO) {
-
         Tanque tanqueExistente = buscarEntidadePorId(id);
-
-
-        tanqueRepository.findByNumero(tanqueDTO.getNumero()).ifPresent(t -> {
-            if (!t.getId().equals(id)) {
-                throw new RuntimeException("Já existe outro tanque com o número: " + tanqueDTO.getNumero());
-            }
-        });
-
-
-        Produto produto = produtoRepository.findById(tanqueDTO.getProdutoId())
-                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado com id: " + tanqueDTO.getProdutoId()));
-
-
+        validarNumeroUnico(tanqueDTO.getNumero(), id);
+        Produto produto = buscarProduto(tanqueDTO.getProdutoId());
         tanqueExistente.setNumero(tanqueDTO.getNumero());
         tanqueExistente.setCapacidadeNominal(tanqueDTO.getCapacidadeNominal());
         tanqueExistente.setProduto(produto);
-
         Tanque tanqueSalvo = tanqueRepository.save(tanqueExistente);
         return new TanqueDTO(tanqueSalvo);
     }
 
     public void deletarTanque(Long id) {
         Tanque tanque = buscarEntidadePorId(id);
-
-
         if (bicoRepository.existsByTanqueId(id)) {
-            throw new RuntimeException("Não é possível excluir o tanque pois ele possui bicos associados.");
+            throw new BusinessException("Não é possível excluir o tanque pois ele possui bicos associados.");
         }
-
-        // TODO: Adicionar validação para LmcMedicaoTanque e LmcCompra
-
         tanqueRepository.delete(tanque);
+    }
+
+    private void validarNumeroUnico(String numero, Long idAtual) {
+        tanqueRepository.findByNumero(numero).ifPresent(tanque -> {
+            boolean mesmoRegistro = idAtual != null && tanque.getId().equals(idAtual);
+            if (!mesmoRegistro) {
+                throw new BusinessException("Já existe um tanque com o número: " + numero);
+            }
+        });
+    }
+
+    private Produto buscarProduto(Long produtoId) {
+        return produtoRepository.findById(produtoId)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado com id: " + produtoId));
     }
 }

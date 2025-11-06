@@ -2,6 +2,7 @@ package com.example.lmc.service;
 
 import com.example.lmc.dto.EmpresaDTO;
 import com.example.lmc.entity.Empresa;
+import com.example.lmc.exception.BusinessException;
 import com.example.lmc.repository.EmpresaRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +49,7 @@ public class EmpresaService {
 
     public EmpresaDTO salvarEmpresa(EmpresaDTO empresaDTO) {
         empresaRepository.findByCnpj(empresaDTO.getCnpj()).ifPresent(e -> {
-            throw new RuntimeException("Já existe uma empresa com o CNPJ: " + empresaDTO.getCnpj());
+            throw new BusinessException("Já existe uma empresa com o CNPJ: " + empresaDTO.getCnpj());
         });
 
         Empresa novaEmpresa = new Empresa();
@@ -71,7 +72,7 @@ public class EmpresaService {
 
         empresaRepository.findByCnpj(empresaDTO.getCnpj()).ifPresent(e -> {
             if (!e.getId().equals(id)) {
-                throw new RuntimeException("Já existe outra empresa com o CNPJ: " + empresaDTO.getCnpj());
+                throw new BusinessException("Já existe outra empresa com o CNPJ: " + empresaDTO.getCnpj());
             }
         });
 

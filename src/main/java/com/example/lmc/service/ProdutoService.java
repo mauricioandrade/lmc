@@ -1,6 +1,7 @@
 package com.example.lmc.service;
 
 import com.example.lmc.entity.Produto;
+import com.example.lmc.exception.BusinessException;
 import com.example.lmc.repository.ProdutoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,7 @@ public class ProdutoService {
 
     public Produto salvarProduto(Produto produto) {
         if (produtoRepository.findByNome(produto.getNome()).isPresent()) {
-            throw new RuntimeException("Já existe um produto com o nome: " + produto.getNome());
+            throw new BusinessException("Já existe um produto com o nome: " + produto.getNome());
         }
         return produtoRepository.save(produto);
     }
@@ -41,15 +42,13 @@ public class ProdutoService {
     public Produto atualizarProduto(Long id, Produto produtoAtualizado) {
         Produto produtoExistente = buscarPorId(id);
 
-
         produtoRepository.findByNome(produtoAtualizado.getNome()).ifPresent(produtoComMesmoNome -> {
             if (!produtoComMesmoNome.getId().equals(id)) {
-                throw new RuntimeException("Já existe outro produto com o nome: " + produtoAtualizado.getNome());
+                throw new BusinessException("Já existe outro produto com o nome: " + produtoAtualizado.getNome());
             }
         });
 
         produtoExistente.setNome(produtoAtualizado.getNome());
-
 
         return produtoRepository.save(produtoExistente);
     }

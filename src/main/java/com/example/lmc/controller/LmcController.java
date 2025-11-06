@@ -1,5 +1,6 @@
 package com.example.lmc.controller;
 
+import com.example.lmc.dto.AtualizarObservacaoRequest;
 import com.example.lmc.dto.LmcFolhaRequestDTO;
 import com.example.lmc.entity.LmcCompra;
 import com.example.lmc.entity.LmcFolha;
@@ -19,16 +20,26 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import net.sf.jasperreports.engine.JRException;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
-import java.util.Map; // <-- 1. VERIFIQUE SE ESTE IMPORT ESTÁ AQUI
 import java.util.Set;
 
 @RestController
@@ -40,11 +51,12 @@ import java.util.Set;
 @Tag(name = "LMC", description = "Operações principais da Folha LMC")
 public class LmcController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(LmcController.class);
+
     private final LmcService lmcService;
     private final RelatorioService relatorioService;
     private final RelatorioPdfService relatorioPdfService;
 
-    @Autowired
     public LmcController(LmcService lmcService, RelatorioService relatorioService, RelatorioPdfService relatorioPdfService) {
         this.lmcService = lmcService;
         this.relatorioService = relatorioService;
@@ -53,17 +65,13 @@ public class LmcController {
 
     @PostMapping
     @Operation(summary = "Criar folha diária", description = "Registra uma nova folha LMC diária com medições, vendas e compras")
-    // ... (ApiResponses)
-    public ResponseEntity<LmcFolha> salvarFolha(
-            @Valid @RequestBody LmcFolhaRequestDTO requestDTO
-    ) {
+    public ResponseEntity<LmcFolha> salvarFolha(@Valid @RequestBody LmcFolhaRequestDTO requestDTO) {
         LmcFolha folhaSalva = lmcService.salvarFolhaDiaria(requestDTO);
-        return new ResponseEntity<>(folhaSalva, HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(folhaSalva);
     }
 
     @GetMapping("/folha")
-    @Operation(summary = "Buscar folha por data e produto", description = "Busca uma única folha LMC (e seus dados) pela data e identificador do produto informado")
-    // ... (ApiResponses)
+    @Operation(summary = "Buscar folha por data e produto", description = "Busca uma única folha LMC pela data e produto informado")
     public ResponseEntity<LmcFolha> buscarFolhaParaEdicao(
             @Parameter(description = "Data da folha a ser consultada", example = "2024-01-15")
             @RequestParam("data") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data,
@@ -71,8 +79,7 @@ public class LmcController {
             @RequestParam("produtoId") Long produtoId
     ) {
         try {
-            LmcFolha folha = lmcService.buscarFolhaPorDataEProduto(data, produtoId);
-            return ResponseEntity.ok(folha);
+            return ResponseEntity.ok(lmcService.buscarFolhaPorDataEProduto(data, produtoId));
         } catch (EntityNotFoundException e) {
             return ResponseEntity.notFound().build();
         }
@@ -80,20 +87,17 @@ public class LmcController {
 
     @GetMapping("/relatorio")
     @Operation(summary = "Gerar relatório em JSON", description = "Gera o relatório consolidado de folhas no período informado")
-    // ... (ApiResponses)
     public ResponseEntity<Set<LmcFolha>> gerarRelatorio(
             @Parameter(description = "Data inicial do período", example = "2024-01-01")
             @RequestParam("inicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
             @Parameter(description = "Data final do período", example = "2024-01-31")
             @RequestParam("fim") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim
     ) {
-        Set<LmcFolha> relatorio = relatorioService.gerarRelatorio(inicio, fim);
-        return ResponseEntity.ok(relatorio);
+        return ResponseEntity.ok(relatorioService.gerarRelatorio(inicio, fim));
     }
 
     @GetMapping("/relatorio/pdf")
-    @Operation(summary = "Gerar relatório em PDF", description = "Exporta o relatório LMC consolidado em formato PDF para o período informado")
-    // ... (ApiResponses)
+    @Operation(summary = "Gerar relatório em PDF", description = "Exporta o relatório LMC consolidado em formato PDF")
     public ResponseEntity<byte[]> gerarRelatorioPdf(
             @Parameter(description = "Data inicial do período", example = "2024-01-01")
             @RequestParam("inicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
@@ -102,63 +106,49 @@ public class LmcController {
     ) {
         try {
             byte[] pdfBytes = relatorioPdfService.gerarRelatorioPdf(inicio, fim);
-
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentDispositionFormData("filename", "LMC_Relatorio.pdf");
-
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .body(pdfBytes);
-
+            return ResponseEntity.ok().headers(headers).body(pdfBytes);
         } catch (JRException e) {
-            if (e.getMessage().contains("Nenhum dado encontrado")) {
+            if (e.getMessage() != null && e.getMessage().contains("Nenhum dado encontrado")) {
                 return ResponseEntity.noContent().build();
             }
-            e.printStackTrace();
+            LOGGER.error("Erro ao gerar relatório PDF", e);
             return ResponseEntity.internalServerError().build();
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("Erro inesperado ao gerar relatório PDF", e);
             return ResponseEntity.internalServerError().build();
         }
     }
 
-    // --- ENDPOINTS DE MEDIÇÃO ---
-
     @PostMapping("/folhas/{folhaId}/medicoes")
     @Operation(summary = "Adicionar nova medição", description = "Adiciona uma nova medição de tanque a uma folha existente")
-    // ... (ApiResponses)
     public ResponseEntity<LmcMedicaoTanque> adicionarMedicao(
             @Parameter(description = "Identificador da folha")
             @PathVariable Long folhaId,
             @Valid @RequestBody LmcFolhaRequestDTO.MedicaoTanqueDTO medicaoDTO) {
-
         LmcMedicaoTanque medicaoSalva = lmcService.adicionarMedicaoTanque(folhaId, medicaoDTO);
-        return new ResponseEntity<>(medicaoSalva, HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(medicaoSalva);
     }
 
     @PutMapping("/medicoes/{id}")
     @Operation(summary = "Atualizar medição de tanque", description = "Atualiza uma medição de tanque e recalcula a folha")
-    // ... (ApiResponses)
     public ResponseEntity<LmcMedicaoTanque> atualizarMedicao(
             @Parameter(description = "Identificador da medição")
             @PathVariable Long id,
             @Valid @RequestBody LmcFolhaRequestDTO.MedicaoTanqueDTO medicaoDTO) {
-
-        LmcMedicaoTanque medicao = lmcService.atualizarMedicaoTanque(id, medicaoDTO);
-        return ResponseEntity.ok(medicao);
+        return ResponseEntity.ok(lmcService.atualizarMedicaoTanque(id, medicaoDTO));
     }
 
     @DeleteMapping("/medicoes/{id}")
     @Operation(summary = "Deletar medição de tanque", description = "Deleta uma medição de tanque e recalcula a folha")
-    // ... (ApiResponses)
     public ResponseEntity<Void> deletarMedicao(
             @Parameter(description = "Identificador da medição")
             @PathVariable Long id) {
         lmcService.deletarMedicaoTanque(id);
         return ResponseEntity.noContent().build();
     }
-
 
     @PostMapping("/folhas/{folhaId}/compras")
     @Operation(summary = "Adicionar nova compra", description = "Adiciona um novo registro de compra a uma folha existente")
@@ -173,27 +163,21 @@ public class LmcController {
             @Parameter(description = "Identificador da folha")
             @PathVariable Long folhaId,
             @Valid @RequestBody LmcFolhaRequestDTO.CompraDTO compraDTO) {
-
         LmcCompra compraSalva = lmcService.adicionarCompra(folhaId, compraDTO);
-        return new ResponseEntity<>(compraSalva, HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(compraSalva);
     }
-    // --- FIM DA MUDANÇA ---
 
     @PutMapping("/compras/{id}")
     @Operation(summary = "Atualizar compra", description = "Atualiza uma compra e recalcula a folha")
-    // ... (ApiResponses)
     public ResponseEntity<LmcCompra> atualizarCompra(
             @Parameter(description = "Identificador da compra")
             @PathVariable Long id,
             @Valid @RequestBody LmcFolhaRequestDTO.CompraDTO compraDTO) {
-
-        LmcCompra compra = lmcService.atualizarCompra(id, compraDTO);
-        return ResponseEntity.ok(compra);
+        return ResponseEntity.ok(lmcService.atualizarCompra(id, compraDTO));
     }
 
     @DeleteMapping("/compras/{id}")
     @Operation(summary = "Deletar compra", description = "Deleta uma compra e recalcula a folha")
-    // ... (ApiResponses)
     public ResponseEntity<Void> deletarCompra(
             @Parameter(description = "Identificador da compra")
             @PathVariable Long id) {
@@ -201,9 +185,6 @@ public class LmcController {
         return ResponseEntity.noContent().build();
     }
 
-    // --- ENDPOINTS DE VENDA ---
-
-    // --- 3. NOVO ENDPOINT (ADICIONAR VENDA) ---
     @PostMapping("/folhas/{folhaId}/vendas")
     @Operation(summary = "Adicionar nova venda de bico", description = "Adiciona um novo registro de venda a uma folha existente")
     @ApiResponses(value = {
@@ -217,27 +198,21 @@ public class LmcController {
             @Parameter(description = "Identificador da folha")
             @PathVariable Long folhaId,
             @Valid @RequestBody LmcFolhaRequestDTO.VendaBicoDTO vendaDTO) {
-
         LmcVendaBico vendaSalva = lmcService.adicionarVenda(folhaId, vendaDTO);
-        return new ResponseEntity<>(vendaSalva, HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(vendaSalva);
     }
-    // --- FIM DA MUDANÇA ---
 
     @PutMapping("/vendas/{id}")
     @Operation(summary = "Atualizar venda de bico", description = "Atualiza uma venda de bico e recalcula a folha")
-    // ... (ApiResponses)
     public ResponseEntity<LmcVendaBico> atualizarVenda(
             @Parameter(description = "Identificador da venda")
             @PathVariable Long id,
             @Valid @RequestBody LmcFolhaRequestDTO.VendaBicoDTO vendaDTO) {
-
-        LmcVendaBico venda = lmcService.atualizarVenda(id, vendaDTO);
-        return ResponseEntity.ok(venda);
+        return ResponseEntity.ok(lmcService.atualizarVenda(id, vendaDTO));
     }
 
     @DeleteMapping("/vendas/{id}")
     @Operation(summary = "Deletar venda de bico", description = "Deleta uma venda de bico e recalcula a folha")
-    // ... (ApiResponses)
     public ResponseEntity<Void> deletarVenda(
             @Parameter(description = "Identificador da venda")
             @PathVariable Long id) {
@@ -245,7 +220,6 @@ public class LmcController {
         return ResponseEntity.noContent().build();
     }
 
-    // --- 4. NOVO ENDPOINT (ATUALIZAR OBSERVAÇÕES) ---
     @PutMapping("/folha/{folhaId}/observacoes")
     @Operation(summary = "Atualizar observações", description = "Atualiza o campo de observações de uma folha LMC")
     @ApiResponses(value = {
@@ -258,11 +232,8 @@ public class LmcController {
     public ResponseEntity<LmcFolha> atualizarObservacoes(
             @Parameter(description = "Identificador da folha")
             @PathVariable Long folhaId,
-            @RequestBody Map<String, String> requestBody) { // Recebe um JSON simples: {"observacoes": "..."}
-
-        String observacoes = requestBody.get("observacoes");
-        LmcFolha folhaAtualizada = lmcService.atualizarObservacoes(folhaId, observacoes);
+            @RequestBody AtualizarObservacaoRequest request) {
+        LmcFolha folhaAtualizada = lmcService.atualizarObservacoes(folhaId, request.getObservacoes());
         return ResponseEntity.ok(folhaAtualizada);
     }
-    // --- FIM DA MUDANÇA ---
 }

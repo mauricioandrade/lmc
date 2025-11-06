@@ -4,11 +4,6 @@ import com.example.lmc.dto.BicoDTO;
 import com.example.lmc.dto.EmpresaDTO;
 import com.example.lmc.dto.ProdutoDTO;
 import com.example.lmc.dto.TanqueDTO;
-import com.example.lmc.entity.Bico;
-import com.example.lmc.entity.Produto;
-import com.example.lmc.entity.Tanque;
-import com.example.lmc.repository.BicoRepository;
-import com.example.lmc.repository.TanqueRepository;
 import com.example.lmc.service.BicoService;
 import com.example.lmc.service.EmpresaService;
 import com.example.lmc.service.ProdutoService;
@@ -37,20 +32,14 @@ public class ConfiguracaoController {
     private final ProdutoService produtoService;
     private final TanqueService tanqueService;
     private final BicoService bicoService;
-    private final TanqueRepository tanqueRepository;
-    private final BicoRepository bicoRepository;
     private final EmpresaService empresaService;
 
     @Autowired
     public ConfiguracaoController(ProdutoService produtoService,
-                                  TanqueRepository tanqueRepository,
-                                  BicoRepository bicoRepository,
                                   TanqueService tanqueService,
                                   EmpresaService empresaService,
                                   BicoService bicoService) {
         this.produtoService = produtoService;
-        this.tanqueRepository = tanqueRepository;
-        this.bicoRepository = bicoRepository;
         this.tanqueService = tanqueService;
         this.empresaService = empresaService;
         this.bicoService = bicoService;
@@ -60,19 +49,17 @@ public class ConfiguracaoController {
     @GetMapping("/produtos")
     @Operation(summary = "Listar produtos")
     public ResponseEntity<List<ProdutoDTO>> getProdutos() {
-        List<Produto> produtos = produtoService.listarTodos();
-        List<ProdutoDTO> produtosDTO = produtos.stream()
-                .map(p -> new ProdutoDTO(p.getId(), p.getNome()))
+        List<ProdutoDTO> produtos = produtoService.listarTodos().stream()
+                .map(ProdutoDTO::fromEntity)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(produtosDTO);
+        return ResponseEntity.ok(produtos);
     }
 
     @GetMapping("/produtos/{id}")
     @Operation(summary = "Buscar um produto por ID")
     public ResponseEntity<ProdutoDTO> getProdutoById(@PathVariable Long id) {
-        Produto produto = produtoService.buscarPorId(id);
-        ProdutoDTO dto = new ProdutoDTO(produto.getId(), produto.getNome());
-        return ResponseEntity.ok(dto);
+        ProdutoDTO produto = ProdutoDTO.fromEntity(produtoService.buscarPorId(id));
+        return ResponseEntity.ok(produto);
     }
 
     @PostMapping("/produtos")
@@ -107,12 +94,7 @@ public class ConfiguracaoController {
     @Operation(summary = "Listar tanques por produto (para formulário LMC)")
     public ResponseEntity<List<TanqueDTO>> getTanquesPorProduto(
             @Parameter(description = "Identificador do produto") @RequestParam Long produtoId) {
-
-        List<Tanque> tanques = tanqueRepository.findByProdutoIdEager(produtoId);
-        List<TanqueDTO> tanquesDTO = tanques.stream()
-                .map(TanqueDTO::new)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(tanquesDTO);
+        return ResponseEntity.ok(tanqueService.listarPorProduto(produtoId));
     }
 
 
@@ -174,14 +156,7 @@ public class ConfiguracaoController {
     @Operation(summary = "Listar bicos por tanque (para formulário LMC)")
     public ResponseEntity<List<BicoDTO>> getBicosPorTanque(
             @Parameter(description = "Identificador do tanque") @RequestParam Long tanqueId) {
-        List<Bico> bicos = bicoRepository.findByTanqueId(tanqueId);
-
-        List<BicoDTO> bicosDTO = bicos.stream()
-                .filter(b -> b.getTanque() != null)
-                .map(BicoDTO::new)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(bicosDTO);
+        return ResponseEntity.ok(bicoService.listarPorTanque(tanqueId));
     }
 
     @GetMapping("/bicos/all")
