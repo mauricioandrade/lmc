@@ -35,6 +35,9 @@ public class RelatorioPdfService {
     private final EmpresaService empresaService;
     private final JasperReportManager jasperReportManager;
 
+    private static final String PAGE_OFFSET_PARAM = "PAGE_OFFSET";
+    private static final String TOTAL_PAGES_PARAM = "TOTAL_PAGES";
+
     public RelatorioPdfService(LmcFolhaRepository lmcFolhaRepository, EmpresaService empresaService, JasperReportManager jasperReportManager) {
         this.lmcFolhaRepository = lmcFolhaRepository;
         this.empresaService = empresaService;
@@ -52,17 +55,41 @@ public class RelatorioPdfService {
         JasperReport subCompras = jasperReportManager.getReport(ReportTemplate.SUB_COMPRAS);
         JasperReport subVendas = jasperReportManager.getReport(ReportTemplate.SUB_VENDAS);
         JasperReport subMedicoes = jasperReportManager.getReport(ReportTemplate.SUB_MEDICOES);
+        JasperReport termoAbertura = jasperReportManager.getReport(ReportTemplate.TERMO_ABERTURA);
+        JasperReport termoEncerramento = jasperReportManager.getReport(ReportTemplate.TERMO_ENCERRAMENTO);
 
-        Map<String, Object> paramsTermos = criarParametrosTermo(empresaAtiva, dataInicio, dataFim, folhas.size());
-        List<JasperPrint> prints = new ArrayList<>(folhas.size() + 2);
-        prints.add(preencherRelatorio(ReportTemplate.TERMO_ABERTURA, paramsTermos));
+        Map<String, Object> parametrosTermoBase = criarParametrosTermo(empresaAtiva, dataInicio, dataFim, folhas.size());
+
+        List<ReportSection> secoes = new ArrayList<>(folhas.size() + 2);
+        secoes.add(new ReportSection(termoAbertura, new HashMap<>(parametrosTermoBase)));
 
         for (LmcFolha folha : folhas) {
             Map<String, Object> parametrosFolha = criarParametrosFolha(folha, empresaAtiva, dataInicio, dataFim, subCompras, subVendas, subMedicoes);
-            prints.add(preencherRelatorio(principal, parametrosFolha));
+            secoes.add(new ReportSection(principal, parametrosFolha));
         }
 
-        prints.add(preencherRelatorio(ReportTemplate.TERMO_ENCERRAMENTO, paramsTermos));
+        secoes.add(new ReportSection(termoEncerramento, new HashMap<>(parametrosTermoBase)));
+
+        List<SectionPreview> preVisualizacoes = new ArrayList<>(secoes.size());
+        for (ReportSection secao : secoes) {
+            JasperPrint preview = preencherRelatorio(secao.relatorio(), secao.parametros());
+            preVisualizacoes.add(new SectionPreview(secao.relatorio(), secao.parametros(), preview.getPages().size()));
+        }
+
+        int totalPaginas = preVisualizacoes.stream()
+                .mapToInt(SectionPreview::pageCount)
+                .sum();
+
+        List<JasperPrint> prints = new ArrayList<>(preVisualizacoes.size());
+        int deslocamentoPaginas = 0;
+        for (SectionPreview secao : preVisualizacoes) {
+            Map<String, Object> parametrosComPaginacao = new HashMap<>(secao.parametros());
+            parametrosComPaginacao.put(PAGE_OFFSET_PARAM, deslocamentoPaginas);
+            parametrosComPaginacao.put(TOTAL_PAGES_PARAM, totalPaginas);
+            prints.add(preencherRelatorio(secao.relatorio(), parametrosComPaginacao));
+            deslocamentoPaginas += secao.pageCount();
+        }
+
         return exportarPdf(prints);
     }
 
@@ -138,11 +165,6 @@ public class RelatorioPdfService {
         return parametros;
     }
 
-    private JasperPrint preencherRelatorio(ReportTemplate template, Map<String, Object> parametros) throws JRException {
-        JasperReport relatorio = jasperReportManager.getReport(template);
-        return preencherRelatorio(relatorio, parametros);
-    }
-
     private JasperPrint preencherRelatorio(JasperReport relatorio, Map<String, Object> parametros) throws JRException {
         return JasperFillManager.fillReport(relatorio, parametros, new JREmptyDataSource(1));
     }
@@ -154,6 +176,12 @@ public class RelatorioPdfService {
         exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(outputStream));
         exporter.exportReport();
         return outputStream.toByteArray();
+    }
+
+    private record ReportSection(JasperReport relatorio, Map<String, Object> parametros) {
+    }
+
+    private record SectionPreview(JasperReport relatorio, Map<String, Object> parametros, int pageCount) {
     }
 
     private static BigDecimal valorOuZero(BigDecimal valor) {
