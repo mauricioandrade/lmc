@@ -4,6 +4,7 @@ import com.example.lmc.dto.BicoDTO;
 import com.example.lmc.dto.EmpresaDTO;
 import com.example.lmc.dto.ProdutoDTO;
 import com.example.lmc.dto.TanqueDTO;
+import com.example.lmc.entity.Produto;
 import com.example.lmc.service.BicoService;
 import com.example.lmc.service.EmpresaService;
 import com.example.lmc.service.ProdutoService;
