@@ -3,7 +3,8 @@
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
               xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
               name="sub_medicoes_tanque" pageWidth="555" pageHeight="130" columnWidth="555"
-              leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+              leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0"
+              uuid="3e5f7c6a-4a2b-4f6f-9087-2f3a0b9c1d52">
 
     <property name="net.sf.jasperreports.default.font.name" value="DejaVu Sans"/>
 
@@ -14,8 +15,7 @@
     <style name="cell" fontName="DejaVu Sans" fontSize="9" isPdfEmbedded="true">
         <box><pen lineWidth="0.5"/></box>
     </style>
-
-    <style name="num" style="cell" pattern="#,##0.00' L'"/>
+    <style name="num" style="cell"/>
 
     <field name="tanque.numero" class="java.lang.String"/>
     <field name="estoqueAbertura" class="java.math.BigDecimal"/>
@@ -23,20 +23,21 @@
 
     <variable name="TotalFechamento" class="java.math.BigDecimal" calculation="Sum">
         <variableExpression><![CDATA[$F{estoqueFechamentoFisico}]]></variableExpression>
+        <initialValueExpression><![CDATA[java.math.BigDecimal.ZERO]]></initialValueExpression>
     </variable>
 
     <columnHeader>
         <band height="20">
             <staticText>
-                <reportElement x="0" y="0" width="120" height="20" style="header"/>
+                <reportElement x="0" y="0" width="120" height="20" style="header" uuid="c2b0d0e1-9a42-4b7c-9f7d-1b2c3d4e5f60"/>
                 <text><![CDATA[9) Nº Tanque]]></text>
             </staticText>
             <staticText>
-                <reportElement x="120" y="0" width="180" height="20" style="header"/>
+                <reportElement x="120" y="0" width="180" height="20" style="header" uuid="0c7b7a3e-6d1b-4f31-9f43-3a2b1c0d9e88"/>
                 <text><![CDATA[Estoque Abertura (L)]]></text>
             </staticText>
             <staticText>
-                <reportElement x="300" y="0" width="255" height="20" style="header"/>
+                <reportElement x="300" y="0" width="255" height="20" style="header" uuid="a1e2f3b4-c5d6-47e8-9a0b-1c2d3e4f5a67"/>
                 <text><![CDATA[9) Fechamento Físico (L)]]></text>
             </staticText>
         </band>
@@ -45,18 +46,18 @@
     <detail>
         <band height="18">
             <textField>
-                <reportElement x="0" y="0" width="120" height="18" style="cell"/>
+                <reportElement x="0" y="0" width="120" height="18" style="cell" uuid="5f4e3d2c-1b0a-4c9d-8e7f-6a5b4c3d2e1f"/>
                 <textFieldExpression><![CDATA[$F{tanque.numero}]]></textFieldExpression>
             </textField>
 
             <textField pattern="#,##0.00' L'">
-                <reportElement x="120" y="0" width="180" height="18" style="num"/>
+                <reportElement x="120" y="0" width="180" height="18" style="num" uuid="9a8b7c6d-5e4f-4d3c-8b7a-6c5d4e3f2a10"/>
                 <textElement textAlignment="Right"/>
                 <textFieldExpression><![CDATA[$F{estoqueAbertura}]]></textFieldExpression>
             </textField>
 
             <textField pattern="#,##0.00' L'">
-                <reportElement x="300" y="0" width="255" height="18" style="num"/>
+                <reportElement x="300" y="0" width="255" height="18" style="num" uuid="1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"/>
                 <textElement textAlignment="Right"/>
                 <textFieldExpression><![CDATA[$F{estoqueFechamentoFisico}]]></textFieldExpression>
             </textField>
@@ -66,13 +67,13 @@
     <columnFooter>
         <band height="18">
             <staticText>
-                <reportElement x="300" y="0" width="160" height="18" style="header"/>
+                <reportElement x="300" y="0" width="160" height="18" style="header" uuid="d0e1f2a3-b4c5-46d7-98e0-1f2a3b4c5d6e"/>
                 <text><![CDATA[9.1) Somatório]]></text>
             </staticText>
             <textField pattern="#,##0.00' L'">
-                <reportElement x="460" y="0" width="95" height="18" style="num"/>
+                <reportElement x="460" y="0" width="95" height="18" style="num" uuid="e1f2a3b4-c5d6-47e8-9f01-2a3b4c5d6e7f"/>
                 <textElement textAlignment="Right"/>
-                <textFieldExpression><![CDATA[$V{TotalFechamento} == null ? java.math.BigDecimal.ZERO : $V{TotalFechamento}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$V{TotalFechamento}]]></textFieldExpression>
             </textField>
         </band>
     </columnFooter>

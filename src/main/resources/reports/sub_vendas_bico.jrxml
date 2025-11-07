@@ -3,7 +3,8 @@
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
               xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
               name="sub_vendas_bico" pageWidth="555" pageHeight="170" columnWidth="555"
-              leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+              leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0"
+              uuid="9f4e8e2f-8b65-4a4a-9e4c-3a2c7b0a2d10">
 
     <property name="net.sf.jasperreports.default.font.name" value="DejaVu Sans"/>
 
@@ -29,37 +30,83 @@
 
     <columnHeader>
         <band height="20">
-            <staticText><reportElement x="0" y="0" width="70" height="20" style="header"/><text><![CDATA[5.1) Tanque]]></text></staticText>
-            <staticText><reportElement x="70" y="0" width="70" height="20" style="header"/><text><![CDATA[5.2) Bico]]></text></staticText>
-            <staticText><reportElement x="140" y="0" width="120" height="20" style="header"/><text><![CDATA[5.3) Enc. Fechamento]]></text></staticText>
-            <staticText><reportElement x="260" y="0" width="120" height="20" style="header"/><text><![CDATA[5.4) Enc. Abertura]]></text></staticText>
-            <staticText><reportElement x="380" y="0" width="80" height="20" style="header"/><text><![CDATA[5.5) Aferições]]></text></staticText>
-            <staticText><reportElement x="460" y="0" width="95" height="20" style="header"/><text><![CDATA[5.6) Vendas Bico]]></text></staticText>
+            <staticText>
+                <reportElement x="0" y="0" width="70" height="20" style="header" uuid="e3a2f8f5-0d01-4447-9e2d-7e8b0af81a01"/>
+                <text><![CDATA[5.1) Tanque]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="70" y="0" width="70" height="20" style="header" uuid="f0c3b1a2-6a4d-4f2e-8a60-6a3a5b2d5b02"/>
+                <text><![CDATA[5.2) Bico]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="140" y="0" width="120" height="20" style="header" uuid="1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c03"/>
+                <text><![CDATA[5.3) Enc. Fechamento]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="260" y="0" width="120" height="20" style="header" uuid="2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d04"/>
+                <text><![CDATA[5.4) Enc. Abertura]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="380" y="0" width="80" height="20" style="header" uuid="3c4d5e6f-7a8b-4c9d-0e1f-2a3b4c5d6e05"/>
+                <text><![CDATA[5.5) Aferições]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="460" y="0" width="95" height="20" style="header" uuid="4d5e6f7a-8b9c-4d0e-1f2a-3b4c5d6e7f06"/>
+                <text><![CDATA[5.6) Vendas Bico]]></text>
+            </staticText>
         </band>
     </columnHeader>
 
     <detail>
         <band height="18">
-            <textField><reportElement x="0" y="0" width="70" height="18" style="cell"/>
-                <textFieldExpression><![CDATA[$F{bico.tanque.numero}]]></textFieldExpression></textField>
-            <textField><reportElement x="70" y="0" width="70" height="18" style="cell"/>
-                <textFieldExpression><![CDATA[$F{bico.numero}]]></textFieldExpression></textField>
-            <textField pattern="#,##0"><reportElement x="140" y="0" width="120" height="18" style="num"/>
-                <textElement textAlignment="Right"/><textFieldExpression><![CDATA[$F{encerranteFechamento}]]></textFieldExpression></textField>
-            <textField pattern="#,##0"><reportElement x="260" y="0" width="120" height="18" style="num"/>
-                <textElement textAlignment="Right"/><textFieldExpression><![CDATA[$F{encerranteAbertura}]]></textFieldExpression></textField>
-            <textField pattern="#,##0.00' L'"><reportElement x="380" y="0" width="80" height="18" style="num"/>
-                <textElement textAlignment="Right"/><textFieldExpression><![CDATA[$F{afericoes}]]></textFieldExpression></textField>
-            <textField pattern="#,##0.00' L'"><reportElement x="460" y="0" width="95" height="18" style="num"/>
-                <textElement textAlignment="Right"/><textFieldExpression><![CDATA[$F{vendasBico}]]></textFieldExpression></textField>
+            <textField>
+                <reportElement x="0" y="0" width="70" height="18" style="cell" uuid="5e6f7a8b-9c4d-4e0f-1a2b-3c4d5e6f7a07"/>
+                <textFieldExpression><![CDATA[$F{bico.tanque.numero}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="70" y="0" width="70" height="18" style="cell" uuid="6f7a8b9c-4d5e-4f0a-1b2c-3d4e5f6a7b08"/>
+                <textFieldExpression><![CDATA[$F{bico.numero}]]></textFieldExpression>
+            </textField>
+
+            <textField pattern="#,##0">
+                <reportElement x="140" y="0" width="120" height="18" style="num" uuid="7a8b9c4d-5e6f-400a-1b2c-3d4e5f6a7b09"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$F{encerranteFechamento}]]></textFieldExpression>
+            </textField>
+
+            <textField pattern="#,##0">
+                <reportElement x="260" y="0" width="120" height="18" style="num" uuid="8b9c4d5e-6f7a-401b-2c3d-4e5f6a7b8c10"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$F{encerranteAbertura}]]></textFieldExpression>
+            </textField>
+
+            <textField pattern="#,##0.00' L'">
+                <reportElement x="380" y="0" width="80" height="18" style="num" uuid="9c4d5e6f-7a8b-402c-3d4e-5f6a7b8c9d11"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$F{afericoes}]]></textFieldExpression>
+            </textField>
+
+            <textField pattern="#,##0.00' L'">
+                <reportElement x="460" y="0" width="95" height="18" style="num" uuid="0d1e2f3a-4b5c-406d-7e8f-9a0b1c2d3e12"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$F{vendasBico}]]></textFieldExpression>
+            </textField>
         </band>
     </detail>
 
     <columnFooter>
         <band height="18">
-            <staticText><reportElement x="365" y="0" width="95" height="18" style="header"/><text><![CDATA[5.7) Vendas no dia]]></text></staticText>
-            <textField pattern="#,##0.00' L'"><reportElement x="460" y="0" width="95" height="18" style="num"/>
-                <textElement textAlignment="Right"/><textFieldExpression><![CDATA[$V{TotalVendasBico}==null?java.math.BigDecimal.ZERO:$V{TotalVendasBico}]]></textFieldExpression></textField>
+            <staticText>
+                <reportElement x="365" y="0" width="95" height="18" style="header" uuid="1e2f3a4b-5c6d-407e-8f9a-0b1c2d3e4f13"/>
+                <text><![CDATA[5.7) Vendas no dia]]></text>
+            </staticText>
+
+            <textField pattern="#,##0.00' L'">
+                <reportElement x="460" y="0" width="95" height="18" style="num" uuid="2f3a4b5c-6d7e-408f-9a0b-1c2d3e4f5a14"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$V{TotalVendasBico} == null ? java.math.BigDecimal.ZERO : $V{TotalVendasBico}]]></textFieldExpression>
+            </textField>
         </band>
     </columnFooter>
 </jasperReport>
