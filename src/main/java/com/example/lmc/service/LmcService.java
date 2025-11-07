@@ -310,9 +310,9 @@ public class LmcService {
         return venda;
     }
 
-    private BigDecimal calcularVolumeVendido(Long encerranteFechamento, Long encerranteAbertura, BigDecimal afericoes) {
-        BigDecimal fechamento = new BigDecimal(encerranteFechamento);
-        BigDecimal abertura = new BigDecimal(encerranteAbertura);
+    private BigDecimal calcularVolumeVendido(BigDecimal encerranteFechamento, BigDecimal encerranteAbertura, BigDecimal afericoes) {
+        BigDecimal fechamento = new BigDecimal(String.valueOf(encerranteFechamento));
+        BigDecimal abertura = new BigDecimal(String.valueOf(encerranteAbertura));
         return fechamento.subtract(abertura).subtract(afericoes);
     }
 
