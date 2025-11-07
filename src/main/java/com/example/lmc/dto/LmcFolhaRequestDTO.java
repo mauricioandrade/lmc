@@ -45,9 +45,9 @@ public class LmcFolhaRequestDTO {
         @NotNull
         private BigDecimal precoNaBomba;
         @NotNull
-        private Long encerranteAbertura;
+        private BigDecimal encerranteAbertura;
         @NotNull
-        private Long encerranteFechamento;
+        private BigDecimal encerranteFechamento;
         @NotNull
         private BigDecimal afericoes;
     }

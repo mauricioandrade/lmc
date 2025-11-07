@@ -28,10 +28,10 @@ public class LmcVendaBico {
     private BigDecimal precoNaBomba;
 
     @Column(name = "encerrante_abertura", nullable = false)
-    private Long encerranteAbertura;
+    private BigDecimal encerranteAbertura;
 
     @Column(name = "encerrante_fechamento", nullable = false)
-    private Long encerranteFechamento;
+    private BigDecimal encerranteFechamento;
 
     @Column(name = "afericoes", precision = 19, scale = 3)
     private BigDecimal afericoes;
