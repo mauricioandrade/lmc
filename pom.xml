@@ -19,7 +19,6 @@
 
   <properties>
     <java.version>21</java.version>
-    <!-- Trave as versões explícitas que você quer controlar -->
     <springdoc.version>2.6.0</springdoc.version>
     <lombok.version>1.18.42</lombok.version>
     <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
@@ -41,7 +40,6 @@
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
 
-    <!-- Springdoc (Swagger/OpenAPI) - manter UMA entrada -->
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
@@ -66,7 +64,6 @@
       <version>6.21.3</version>
     </dependency>
 
-    <!-- Lombok apenas em provided (não vai para o runtime) -->
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
@@ -83,7 +80,6 @@
 
   <build>
     <plugins>
-      <!-- Garante compilação com release 21 e o AP do Lombok -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -103,7 +99,6 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
-        <!-- Não precisa excluir o Lombok; pode remover esse bloco se quiser -->
       </plugin>
     </plugins>
   </build>

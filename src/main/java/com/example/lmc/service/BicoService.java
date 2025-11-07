@@ -8,7 +8,6 @@ import com.example.lmc.repository.BicoRepository;
 import com.example.lmc.repository.LmcVendaBicoRepository;
 import com.example.lmc.repository.TanqueRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +22,6 @@ public class BicoService {
     private final TanqueRepository tanqueRepository;
     private final LmcVendaBicoRepository lmcVendaBicoRepository;
 
-    @Autowired
     public BicoService(BicoRepository bicoRepository, TanqueRepository tanqueRepository, LmcVendaBicoRepository lmcVendaBicoRepository) {
         this.bicoRepository = bicoRepository;
         this.tanqueRepository = tanqueRepository;

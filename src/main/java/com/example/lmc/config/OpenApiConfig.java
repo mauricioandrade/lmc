@@ -1,7 +1,7 @@
 package com.example.lmc.config;
 
-import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.ExternalDocumentation;
+import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
@@ -14,30 +14,42 @@ import java.util.List;
 @Configuration
 public class OpenApiConfig {
 
+    private static final String LOCAL_SERVER_URL = "http://localhost:8080";
+    private static final String PRODUCTION_SERVER_URL = "https://lmc.example.com";
+    private static final String TERMS_OF_SERVICE_URL = "https://lmc.example.com/termos";
+    private static final String REPOSITORY_URL = "https://github.com/example/lmc";
+
     @Bean
     public OpenAPI lmcOpenAPI() {
         return new OpenAPI()
-                .info(new Info()
-                        .title("LMC API")
-                        .description("Documentação completa do Livro de Movimentação de Combustíveis, abrangendo operações de configuração, lançamento diário e geração de relatórios.")
-                        .version("v1")
-                        .contact(new Contact()
-                                .name("Equipe LMC")
-                                .email("contato@example.com")
-                                .url("https://example.com/lmc"))
-                        .license(new License()
-                                .name("Licença MIT")
-                                .url("https://opensource.org/licenses/MIT")))
+                .info(buildInfo())
                 .servers(List.of(
-                        new Server()
-                                .url("http://localhost:8080")
-                                .description("Servidor local de desenvolvimento"),
-                        new Server()
-                                .url("https://lmc.example.com")
-                                .description("Servidor de produção")
+                        createServer(LOCAL_SERVER_URL, "Servidor local de desenvolvimento"),
+                        createServer(PRODUCTION_SERVER_URL, "Servidor de produção")
                 ))
                 .externalDocs(new ExternalDocumentation()
                         .description("Repositório do projeto e guias complementares")
-                        .url("https://github.com/example/lmc"));
+                        .url(REPOSITORY_URL));
+    }
+
+    private Info buildInfo() {
+        return new Info()
+                .title("LMC API")
+                .description("Documentação completa do Livro de Movimentação de Combustíveis, abrangendo operações de configuração, lançamento diário e geração de relatórios.")
+                .termsOfService(TERMS_OF_SERVICE_URL)
+                .version("v1")
+                .contact(new Contact()
+                        .name("Equipe LMC")
+                        .email("contato@lmc.example.com")
+                        .url(PRODUCTION_SERVER_URL))
+                .license(new License()
+                        .name("Licença MIT")
+                        .url("https://opensource.org/licenses/MIT"));
+    }
+
+    private Server createServer(String url, String description) {
+        return new Server()
+                .url(url)
+                .description(description);
     }
 }

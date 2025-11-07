@@ -2,7 +2,6 @@ package com.example.lmc.service;
 
 import com.example.lmc.entity.LmcFolha;
 import com.example.lmc.repository.LmcFolhaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -12,8 +11,11 @@ import java.util.Set;
 @Service
 public class RelatorioService {
 
-    @Autowired
-    private LmcFolhaRepository lmcFolhaRepository;
+    private final LmcFolhaRepository lmcFolhaRepository;
+
+    public RelatorioService(LmcFolhaRepository lmcFolhaRepository) {
+        this.lmcFolhaRepository = lmcFolhaRepository;
+    }
 
     public Set<LmcFolha> gerarRelatorio(LocalDate inicio, LocalDate fim) {
         return lmcFolhaRepository.findByDataBetweenEager(inicio, fim);

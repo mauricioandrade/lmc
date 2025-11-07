@@ -12,7 +12,6 @@
 
     <property name="net.sf.jasperreports.default.font.name" value="DejaVu Sans"/>
 
-    <!-- Styles -->
     <style name="base" isDefault="true" fontName="DejaVu Sans" fontSize="9" isPdfEmbedded="true"/>
     <style name="label" style="base" isBold="true"/>
     <style name="header" style="base" isBold="true" mode="Opaque" backcolor="#DEDEDE">
@@ -26,7 +25,6 @@
     <style name="liters" style="cellRight" pattern="#,##0.00' L'"/>
     <style name="small" style="base" fontSize="8"/>
 
-    <!-- Parameters -->
     <parameter name="EMPRESA_NOME" class="java.lang.String"/>
     <parameter name="EMPRESA_CNPJ" class="java.lang.String"/>
     <parameter name="EMPRESA_ENDERECO" class="java.lang.String"/>
@@ -137,7 +135,6 @@
 
     <detail>
         <band height="420">
-            <!-- Estoque de Abertura / Volume Recebido / Disponível -->
             <frame>
                 <reportElement x="0" y="0" width="555" height="66" style="cell" uuid="c1d2e3f4-a5b6-4789-c1d2-e3f4a5b6c018"/>
                 <staticText>
@@ -173,7 +170,6 @@
                 </textField>
             </frame>
 
-            <!-- Compras -->
             <frame>
                 <reportElement x="0" y="74" width="555" height="110" style="cell" uuid="c1d2e3f4-a5b6-4789-c1d2-e3f4a5b6c026"/>
                 <staticText>
@@ -194,7 +190,6 @@
                 </subreport>
             </frame>
 
-            <!-- Vendas -->
             <frame>
                 <reportElement x="0" y="190" width="555" height="150" style="cell" uuid="c1d2e3f4-a5b6-4789-c1d2-e3f4a5b6c029"/>
                 <staticText>
@@ -212,7 +207,6 @@
                 </subreport>
             </frame>
 
-            <!-- Estoque Escritural / Fechamento / Perdas+Ganhos / 9.1 -->
             <frame>
                 <reportElement x="0" y="346" width="555" height="74" style="cell" uuid="c1d2e3f4-a5b6-4789-c1d2-e3f4a5b6c032"/>
                 <staticText>
@@ -259,7 +253,6 @@
         </band>
     </detail>
 
-    <!-- Rodapé padrão -->
     <pageFooter>
         <band height="25">
             <textField>
@@ -275,10 +268,8 @@
         </band>
     </pageFooter>
 
-    <!-- Última página -->
     <lastPageFooter>
         <band height="220">
-            <!-- Fechamento Físico por Tanque -->
             <frame>
                 <reportElement x="0" y="0" width="555" height="110" style="cell" uuid="c1d2e3f4-a5b6-4789-c1d2-e3f4a5b6c044"/>
                 <staticText>
@@ -296,7 +287,6 @@
                 </subreport>
             </frame>
 
-            <!-- Valores e Observações -->
             <frame>
                 <reportElement x="0" y="118" width="555" height="84" style="cell" uuid="c1d2e3f4-a5b6-4789-c1d2-e3f4a5b6c047"/>
                 <staticText>
@@ -350,7 +340,6 @@
                 </textField>
             </frame>
 
-            <!-- Rodapé da última página -->
             <textField>
                 <reportElement x="445" y="200" width="80" height="20" style="small" uuid="c1d2e3f4-a5b6-4789-c1d2-e3f4a5b6c059"/>
                 <textElement textAlignment="Right" verticalAlignment="Middle"/>

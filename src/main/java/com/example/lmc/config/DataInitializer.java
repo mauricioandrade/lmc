@@ -8,11 +8,12 @@ import com.example.lmc.repository.ProdutoRepository;
 import com.example.lmc.repository.TanqueRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Component
@@ -20,101 +21,74 @@ public class DataInitializer implements CommandLineRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataInitializer.class);
 
-    @Autowired
-    private ProdutoRepository produtoRepository;
-    @Autowired
-    private TanqueRepository tanqueRepository;
-    @Autowired
-    private BicoRepository bicoRepository;
+    private final ProdutoRepository produtoRepository;
+    private final TanqueRepository tanqueRepository;
+    private final BicoRepository bicoRepository;
+
+    public DataInitializer(ProdutoRepository produtoRepository, TanqueRepository tanqueRepository, BicoRepository bicoRepository) {
+        this.produtoRepository = produtoRepository;
+        this.tanqueRepository = tanqueRepository;
+        this.bicoRepository = bicoRepository;
+    }
 
     @Override
     public void run(String... args) {
-        if (produtoRepository.count() == 0) {
-            LOGGER.info("Populando banco de dados com dados de teste");
-
-            Produto gasolina = new Produto();
-            gasolina.setNome("Gasolina Comum");
-
-            Produto etanol = new Produto();
-            etanol.setNome("Etanol Hidratado");
-
-            Produto dieselS500 = new Produto();
-            dieselS500.setNome("Diesel S500");
-
-            Produto dieselS10 = new Produto();
-            dieselS10.setNome("Diesel S-10");
-
-            produtoRepository.saveAll(List.of(gasolina, etanol, dieselS500, dieselS10));
-
-            Tanque tq1Gasolina = new Tanque();
-            tq1Gasolina.setNumero("TQ-01");
-            tq1Gasolina.setCapacidadeNominal(new BigDecimal("20000.00"));
-            tq1Gasolina.setProduto(gasolina);
-
-            Tanque tq2Etanol = new Tanque();
-            tq2Etanol.setNumero("TQ-02");
-            tq2Etanol.setCapacidadeNominal(new BigDecimal("20000.00"));
-            tq2Etanol.setProduto(etanol);
-
-            Tanque tq3DieselS500 = new Tanque();
-            tq3DieselS500.setNumero("TQ-03");
-            tq3DieselS500.setCapacidadeNominal(new BigDecimal("15000.00"));
-            tq3DieselS500.setProduto(dieselS500);
-
-            Tanque tq4DieselS10 = new Tanque();
-            tq4DieselS10.setNumero("TQ-04");
-            tq4DieselS10.setCapacidadeNominal(new BigDecimal("15000.00"));
-            tq4DieselS10.setProduto(dieselS10);
-
-            tanqueRepository.saveAll(List.of(tq1Gasolina, tq2Etanol, tq3DieselS500, tq4DieselS10));
-
-            Bico b01 = new Bico();
-            b01.setNumero("Bico 01");
-            b01.setTanque(tq1Gasolina);
-            Bico b02 = new Bico();
-            b02.setNumero("Bico 02");
-            b02.setTanque(tq1Gasolina);
-            Bico b03 = new Bico();
-            b03.setNumero("Bico 03");
-            b03.setTanque(tq1Gasolina);
-            Bico b04 = new Bico();
-            b04.setNumero("Bico 04");
-            b04.setTanque(tq1Gasolina);
-
-            Bico b05 = new Bico();
-            b05.setNumero("Bico 05");
-            b05.setTanque(tq2Etanol);
-            Bico b06 = new Bico();
-            b06.setNumero("Bico 06");
-            b06.setTanque(tq2Etanol);
-            Bico b07 = new Bico();
-            b07.setNumero("Bico 07");
-            b07.setTanque(tq2Etanol);
-            Bico b08 = new Bico();
-            b08.setNumero("Bico 08");
-            b08.setTanque(tq2Etanol);
-
-            Bico b09 = new Bico();
-            b09.setNumero("Bico 09");
-            b09.setTanque(tq4DieselS10);
-            Bico b10 = new Bico();
-            b10.setNumero("Bico 10");
-            b10.setTanque(tq4DieselS10);
-
-            Bico b11 = new Bico();
-            b11.setNumero("Bico 11");
-            b11.setTanque(tq3DieselS500);
-            Bico b12 = new Bico();
-            b12.setNumero("Bico 12");
-            b12.setTanque(tq3DieselS500);
-
-            bicoRepository.saveAll(List.of(
-                    b01, b02, b03, b04, b05, b06, b07, b08, b09, b10, b11, b12
-            ));
-
-            LOGGER.info("Dados de teste populados (4 Produtos, 4 Tanques, 12 Bicos)");
-        } else {
+        if (produtoRepository.count() > 0) {
             LOGGER.info("Banco de dados já populado. Ignorando data initializer");
+            return;
         }
+
+        LOGGER.info("Populando banco de dados com dados de teste");
+
+        Produto gasolina = novoProduto("Gasolina Comum");
+        Produto etanol = novoProduto("Etanol Hidratado");
+        Produto dieselS500 = novoProduto("Diesel S500");
+        Produto dieselS10 = novoProduto("Diesel S-10");
+
+        produtoRepository.saveAll(List.of(gasolina, etanol, dieselS500, dieselS10));
+
+        Tanque tanqueGasolina = novoTanque("TQ-01", "20000.00", gasolina);
+        Tanque tanqueEtanol = novoTanque("TQ-02", "20000.00", etanol);
+        Tanque tanqueDieselS500 = novoTanque("TQ-03", "15000.00", dieselS500);
+        Tanque tanqueDieselS10 = novoTanque("TQ-04", "15000.00", dieselS10);
+
+        tanqueRepository.saveAll(List.of(tanqueGasolina, tanqueEtanol, tanqueDieselS500, tanqueDieselS10));
+
+        List<Bico> bicos = new ArrayList<>();
+        bicos.addAll(criarBicos(tanqueGasolina, "Bico 01", "Bico 02", "Bico 03", "Bico 04"));
+        bicos.addAll(criarBicos(tanqueEtanol, "Bico 05", "Bico 06", "Bico 07", "Bico 08"));
+        bicos.addAll(criarBicos(tanqueDieselS10, "Bico 09", "Bico 10"));
+        bicos.addAll(criarBicos(tanqueDieselS500, "Bico 11", "Bico 12"));
+
+        bicoRepository.saveAll(bicos);
+
+        LOGGER.info("Dados de teste populados (4 Produtos, 4 Tanques, 12 Bicos)");
+    }
+
+    private Produto novoProduto(String nome) {
+        Produto produto = new Produto();
+        produto.setNome(nome);
+        return produto;
+    }
+
+    private Tanque novoTanque(String numero, String capacidadeNominal, Produto produto) {
+        Tanque tanque = new Tanque();
+        tanque.setNumero(numero);
+        tanque.setCapacidadeNominal(new BigDecimal(capacidadeNominal));
+        tanque.setProduto(produto);
+        return tanque;
+    }
+
+    private List<Bico> criarBicos(Tanque tanque, String... numeros) {
+        return Arrays.stream(numeros)
+                .map(numero -> novoBico(numero, tanque))
+                .toList();
+    }
+
+    private Bico novoBico(String numero, Tanque tanque) {
+        Bico bico = new Bico();
+        bico.setNumero(numero);
+        bico.setTanque(tanque);
+        return bico;
     }
 }

@@ -5,7 +5,6 @@ import com.example.lmc.entity.Empresa;
 import com.example.lmc.exception.BusinessException;
 import com.example.lmc.repository.EmpresaRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +17,6 @@ public class EmpresaService {
 
     private final EmpresaRepository empresaRepository;
 
-    @Autowired
     public EmpresaService(EmpresaRepository empresaRepository) {
         this.empresaRepository = empresaRepository;
     }
