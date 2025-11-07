@@ -4,7 +4,6 @@ import com.example.lmc.entity.Produto;
 import com.example.lmc.exception.BusinessException;
 import com.example.lmc.repository.ProdutoRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +15,6 @@ public class ProdutoService {
 
     private final ProdutoRepository produtoRepository;
 
-    @Autowired
     public ProdutoService(ProdutoRepository produtoRepository) {
         this.produtoRepository = produtoRepository;
     }

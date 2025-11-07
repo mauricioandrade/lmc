@@ -7,8 +7,8 @@ import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConf
 @SpringBootApplication(exclude = { ErrorMvcAutoConfiguration.class })
 public class LmcApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(LmcApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(LmcApplication.class, args);
+    }
 
 }
