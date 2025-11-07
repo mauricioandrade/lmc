@@ -22,6 +22,8 @@
     <parameter name="PERIODO_INICIO" class="java.util.Date"/>
     <parameter name="PERIODO_FIM" class="java.util.Date"/>
     <parameter name="TOTAL_FOLHAS" class="java.lang.Integer"/>
+    <parameter name="PAGE_OFFSET" class="java.lang.Integer"/>
+    <parameter name="TOTAL_PAGES" class="java.lang.Integer"/>
 
     <title>
         <band height="70">
@@ -120,7 +122,7 @@
                 <textElement textAlignment="Right" verticalAlignment="Middle">
                     <font size="10"/>
                 </textElement>
-                <textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER} + " de "]]></textFieldExpression>
+                <textFieldExpression><![CDATA["Página " + ($V{PAGE_NUMBER}.intValue() + ($P{PAGE_OFFSET} == null ? 0 : $P{PAGE_OFFSET}.intValue())) + " de "]]></textFieldExpression>
             </textField>
 
             <textField evaluationTime="Report">
@@ -128,7 +130,7 @@
                 <textElement textAlignment="Left" verticalAlignment="Middle">
                     <font size="10"/>
                 </textElement>
-                <textFieldExpression><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[String.valueOf($P{TOTAL_PAGES} == null ? $V{PAGE_NUMBER} : $P{TOTAL_PAGES})]]></textFieldExpression>
             </textField>
         </band>
     </pageFooter>

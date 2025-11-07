@@ -50,6 +50,8 @@
     <parameter name="PERDAS_GANHOS" class="java.math.BigDecimal"/>
     <parameter name="VALOR_VENDAS_DIA" class="java.math.BigDecimal"/>
     <parameter name="VALOR_VENDAS_MES" class="java.math.BigDecimal"/>
+    <parameter name="PAGE_OFFSET" class="java.lang.Integer"/>
+    <parameter name="TOTAL_PAGES" class="java.lang.Integer"/>
 
     <title>
         <band height="90">
@@ -263,12 +265,12 @@
             <textField>
                 <reportElement x="445" y="5" width="80" height="20" style="small" uuid="c1d2e3f4-a5b6-4789-c1d2-e3f4a5b6c042"/>
                 <textElement textAlignment="Right" verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER} + " de "]]></textFieldExpression>
+                <textFieldExpression><![CDATA["Página " + ($V{PAGE_NUMBER}.intValue() + ($P{PAGE_OFFSET} == null ? 0 : $P{PAGE_OFFSET}.intValue())) + " de "]]></textFieldExpression>
             </textField>
             <textField evaluationTime="Report">
                 <reportElement x="525" y="5" width="30" height="20" style="small" uuid="c1d2e3f4-a5b6-4789-c1d2-e3f4a5b6c043"/>
                 <textElement textAlignment="Left" verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA["" + $V{PAGE_COUNT}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[String.valueOf($P{TOTAL_PAGES} == null ? $V{PAGE_COUNT} : $P{TOTAL_PAGES})]]></textFieldExpression>
             </textField>
         </band>
     </pageFooter>
@@ -352,12 +354,12 @@
             <textField>
                 <reportElement x="445" y="200" width="80" height="20" style="small" uuid="c1d2e3f4-a5b6-4789-c1d2-e3f4a5b6c059"/>
                 <textElement textAlignment="Right" verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER} + " de "]]></textFieldExpression>
+                <textFieldExpression><![CDATA["Página " + ($V{PAGE_NUMBER}.intValue() + ($P{PAGE_OFFSET} == null ? 0 : $P{PAGE_OFFSET}.intValue())) + " de "]]></textFieldExpression>
             </textField>
             <textField evaluationTime="Report">
                 <reportElement x="525" y="200" width="30" height="20" style="small" uuid="c1d2e3f4-a5b6-4789-c1d2-e3f4a5b6c060"/>
                 <textElement textAlignment="Left" verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA["" + $V{PAGE_COUNT}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[String.valueOf($P{TOTAL_PAGES} == null ? $V{PAGE_COUNT} : $P{TOTAL_PAGES})]]></textFieldExpression>
             </textField>
         </band>
     </lastPageFooter>
