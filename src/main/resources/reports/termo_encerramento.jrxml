@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="termo_encerramento"
+              pageWidth="595" pageHeight="842"
+              columnWidth="555"
+              leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20"
+              uuid="b1c2d3e4-f5a6-2222-b1c2-d3e4f5a6b7c8">
+
+    <property name="net.sf.jasperreports.default.font.name" value="DejaVu Sans"/>
+
+    <style name="base" isDefault="true" fontName="DejaVu Sans" fontSize="12" isPdfEmbedded="true"/>
+    <style name="h1" style="base" fontSize="16" isBold="true"/>
+    <style name="h2" style="base" fontSize="14" isBold="true"/>
+    <style name="label" style="base" isBold="true"/>
+
+    <parameter name="EMPRESA_NOME" class="java.lang.String"/>
+    <parameter name="EMPRESA_CNPJ" class="java.lang.String"/>
+    <parameter name="LIVRO_NUMERO" class="java.lang.String"/>
+    <parameter name="PERIODO_FIM" class="java.util.Date"/>
+    <parameter name="TOTAL_FOLHAS" class="java.lang.Integer"/>
+
+    <title>
+        <band height="70">
+            <staticText>
+                <reportElement x="0" y="10" width="555" height="30" style="h1" uuid="b1c2d3e4-f5a6-4789-b0c1-d2e3f4a5b001"/>
+                <textElement textAlignment="Center"/>
+                <text><![CDATA[LIVRO DE MOVIMENTAÇÃO DE COMBUSTÍVEIS (LMC)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="0" y="40" width="555" height="20" uuid="b1c2d3e4-f5a6-4789-b0c1-d2e3f4a5b002"/>
+                <textElement textAlignment="Center"/>
+                <text><![CDATA[Resolução ANP nº 884, de 5 de setembro de 2022]]></text>
+            </staticText>
+        </band>
+    </title>
+
+    <detail>
+        <band height="600" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="20" width="555" height="30" style="h2" uuid="b1c2d3e4-f5a6-4789-b0c1-d2e3f4a5b003"/>
+                <textElement textAlignment="Center"/>
+                <text><![CDATA[TERMO DE ENCERRAMENTO]]></text>
+            </staticText>
+
+            <textField>
+                <reportElement x="0" y="80" width="555" height="60" style="base" uuid="b1c2d3e4-f5a6-4789-b0c1-d2e3f4a5b004"/>
+                <textElement textAlignment="Left"/>
+                <textFieldExpression><![CDATA["Encerra-se o presente Livro de Movimentação de Combustíveis (LMC), de número " + $P{LIVRO_NUMERO} + ", contendo " + $P{TOTAL_FOLHAS} + " folhas de movimentação, referente ao período encerrado em " + new java.text.SimpleDateFormat("dd/MM/yyyy").format($P{PERIODO_FIM}) + "."]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="0" y="150" width="150" height="20" style="label" uuid="b1c2d3e4-f5a6-4789-b0c1-d2e3f4a5b005"/>
+                <text><![CDATA[Razão Social:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="150" y="150" width="405" height="20" style="base" uuid="b1c2d3e4-f5a6-4789-b0c1-d2e3f4a5b006"/>
+                <textFieldExpression><![CDATA[$P{EMPRESA_NOME}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="0" y="180" width="150" height="20" style="label" uuid="b1c2d3e4-f5a6-4789-b0c1-d2e3f4a5b007"/>
+                <text><![CDATA[CNPJ:]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="150" y="180" width="405" height="20" style="base" uuid="b1c2d3e4-f5a6-4789-b0c1-d2e3f4a5b008"/>
+                <textFieldExpression><![CDATA[$P{EMPRESA_CNPJ}]]></textFieldExpression>
+            </textField>
+
+            <line>
+                <reportElement x="120" y="450" width="300" height="1" uuid="b1c2d3e4-f5a6-4789-b0c1-d2e3f4a5b009"/>
+            </line>
+            <staticText>
+                <reportElement x="120" y="455" width="300" height="20" style="base" uuid="b1c2d3e4-f5a6-4789-b0c1-d2e3f4a5b010"/>
+                <textElement textAlignment="Center"/>
+                <text><![CDATA[Assinatura do Representante Legal]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement x="120" y="475" width="300" height="20" style="base" uuid="b1c2d3e4-f5a6-4789-b0c1-d2e3f4a5b011"/>
+                <textElement textAlignment="Center"/>
+                <textFieldExpression><![CDATA[$P{EMPRESA_NOME}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+    <pageFooter>
+        <band height="25">
+            <textField>
+                <reportElement x="445" y="5" width="80" height="20" style="base" uuid="b1c2d3e4-f5a6-4789-b0c1-c00000000007"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER} + " de "]]></textFieldExpression>
+            </textField>
+
+            <textField evaluationTime="Report">
+                <reportElement x="525" y="5" width="30" height="20" style="base" uuid="b1c2d3e4-f5a6-4789-b0c1-c00000000008"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+
+</jasperReport>
